@@ -16,3 +16,6 @@
 [submodule "recruitment"]
 	path = recruitment
 	url = https://github.com/WefhLNUE/recruitment
+[submodule "HR-system-timemanagment"]
+	path = HR-system-timemanagment
+	url = https://github.com/WefhLNUE/HR-system-timemanagment
