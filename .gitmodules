@@ -7,9 +7,6 @@
 [submodule "preformance-optimisation"]
 	path = preformance-optimisation
 	url = https://github.com/WefhLNUE/preformance-optimisation
-[submodule "recruitmentNew"]
-	path = recruitmentNew
-	url = https://github.com/WefhLNUE/recruitmentNew
 [submodule "leaves-subsystem"]
 	path = leaves-subsystem
 	url = https://github.com/WefhLNUE/leaves-subsystem
@@ -19,3 +16,6 @@
 [submodule "Time-management-system"]
 	path = Time-management-system
 	url = https://github.com/WefhLNUE/Time-management-system
+[submodule "hr-recruitment"]
+	path = hr-recruitment
+	url = https://github.com/WefhLNUE/hr-recruitment
