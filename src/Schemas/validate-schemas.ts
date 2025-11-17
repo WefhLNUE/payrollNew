@@ -1,11 +1,24 @@
 /**
- * Schema Validation Script
- * This script validates that all schemas are correctly defined and can be instantiated
+ * GLOBAL SCHEMA VALIDATION SCRIPT
+ * Validates that all schemas compile and expose the expected structure.
  */
 
-import { PayGrade, PayGradeSchema } from './PayGrade.schema';
 import { Deduction, DeductionSchema } from './Deduction.schema';
 import { ExpenseClaim, ExpenseClaimSchema } from './ExpenseClaim.schema';
+import { LaborLawPolicy, LaborLawPolicySchema } from './LaborLawPolicy.schema';
+import { LeavePolicy, LeavePolicySchema } from './LeavePolicy.schema';
+import { LegalRule, LegalRuleSchema } from './LegalRule.schema';
+import { MisconductRule, MisconductRuleSchema } from './MisconductRule.schema';
+import { OvertimeRule, OvertimeRuleSchema } from './OverTimeRule.schema';
+import { PayGrade, PayGradeSchema } from './PayGrade.schema';
+import {
+  PayrollRunConfiguration,
+  PayrollRunConfigurationSchema,
+} from './PayrollRunConfiguration.schema';
+import {
+  PayrollSchedule,
+  PayrollScheduleSchema,
+} from './PayrollSchedule.schema';
 
 interface ValidationResult {
   schema: string;
@@ -16,141 +29,118 @@ interface ValidationResult {
 
 const results: ValidationResult[] = [];
 
-// Helper function to validate schema structure
+/**
+ * Generic validator
+ */
 function validateSchema(
   schemaName: string,
   schemaClass: any,
   schemaFactory: any,
-  requiredFields: string[],
-  enumFields: Record<string, string[]>
+  requiredFields: string[] = [],
+  enumFields: Record<string, string[]> = {}
 ): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  try {
-    // Check if schema can be created
-    if (!schemaFactory) {
-      errors.push('Schema factory is undefined');
-    }
-
-    // Check if class exists
-    if (!schemaClass) {
-      errors.push('Schema class is undefined');
-    }
-
-    // Check if schema factory is a function/object (Mongoose schema)
-    if (schemaFactory && typeof schemaFactory !== 'object' && typeof schemaFactory !== 'function') {
-      errors.push('Schema factory is not a valid Mongoose schema');
-    }
-
-    // Note: We can't easily check decorator-defined fields at runtime
-    // because @Prop decorators are processed by NestJS/Mongoose at compile time.
-    // The presence of the schemaFactory indicates the schema was created successfully.
-    
-    // Informational: List expected required fields (for documentation)
-    if (requiredFields.length > 0) {
-      warnings.push(`Expected required fields: ${requiredFields.join(', ')} (verified via schema compilation)`);
-    }
-
-    // Informational: List expected enum values (for documentation)
-    Object.entries(enumFields).forEach(([field, values]) => {
-      warnings.push(`Enum '${field}': [${values.join(', ')}] (verified via TypeScript compilation)`);
-    });
-
-    results.push({
-      schema: schemaName,
-      valid: errors.length === 0,
-      errors,
-      warnings,
-    });
-  } catch (error: any) {
-    results.push({
-      schema: schemaName,
-      valid: false,
-      errors: [error.message || 'Unknown error'],
-      warnings: [],
-    });
+  if (!schemaFactory) {
+    errors.push('SchemaFactory export is missing');
   }
 
-  return results[results.length - 1];
+  if (!schemaClass) {
+    errors.push('Class export is missing');
+  }
+
+  if (schemaFactory && typeof schemaFactory !== 'object' && typeof schemaFactory !== 'function') {
+    errors.push('SchemaFactory export is not a valid MongooseSchema');
+  }
+
+  if (requiredFields.length > 0) {
+    warnings.push(`Required fields (TS-level): ${requiredFields.join(', ')}`);
+  }
+
+  Object.entries(enumFields).forEach(([field, values]) => {
+    warnings.push(`Enum field '${field}': [${values.join(', ')}]`);
+  });
+
+  const result: ValidationResult = {
+    schema: schemaName,
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+
+  results.push(result);
+  return result;
 }
 
-// Validate PayGrade Schema
-console.log('🔍 Validating PayGrade Schema...');
+/**
+ * VALIDATE ALL SCHEMAS
+ */
+
+console.log('\n🔍 VALIDATING SCHEMAS...\n');
+
+// PAY GRADE
+validateSchema('PayGrade', PayGrade, PayGradeSchema);
+
+// DEDUCTION
+validateSchema('Deduction', Deduction, DeductionSchema);
+
+// EXPENSE CLAIM
+validateSchema('ExpenseClaim', ExpenseClaim, ExpenseClaimSchema);
+
+// LABOR LAW POLICY
+validateSchema('LaborLawPolicy', LaborLawPolicy, LaborLawPolicySchema);
+
+// LEAVE POLICY
+validateSchema('LeavePolicy', LeavePolicy, LeavePolicySchema);
+
+// LEGAL RULE
+validateSchema('LegalRule', LegalRule, LegalRuleSchema);
+
+// MISCONDUCT RULE
+validateSchema('MisconductRule', MisconductRule, MisconductRuleSchema);
+
+// OVERTIME RULE
+validateSchema('OverTimeRule', OvertimeRule, OvertimeRuleSchema);
+
+// PAYROLL RUN CONFIGURATION
 validateSchema(
-  'PayGrade',
-  PayGrade,
-  PayGradeSchema,
-  ['name', 'position', 'department', 'minSalary', 'maxSalary', 'basePay', 'status'],
-  {
-    status: ['draft', 'pending', 'approved', 'rejected'],
-  }
+  'PayrollRunConfiguration',
+  PayrollRunConfiguration,
+  PayrollRunConfigurationSchema
 );
 
-// Validate Deduction Schema
-console.log('🔍 Validating Deduction Schema...');
-validateSchema(
-  'Deduction',
-  Deduction,
-  DeductionSchema,
-  ['type', 'name', 'calculationMethod', 'status'],
-  {
-    type: ['tax', 'loan', 'penalty', 'insurance', 'other'],
-    calculationMethod: ['fixed', 'percentage', 'calculated'],
-    status: ['draft', 'pending', 'approved', 'rejected'],
-  }
-);
+// PAYROLL SCHEDULE
+validateSchema('PayrollSchedule', PayrollSchedule, PayrollScheduleSchema);
 
-// Validate ExpenseClaim Schema
-console.log('🔍 Validating ExpenseClaim Schema...');
-validateSchema(
-  'ExpenseClaim',
-  ExpenseClaim,
-  ExpenseClaimSchema,
-  ['employeeId', 'amount', 'type', 'expenseDate', 'status'],
-  {
-    type: ['travel', 'meal', 'accommodation', 'transportation', 'other'],
-    status: ['pending', 'approved', 'rejected'],
-  }
-);
-
-// Print Results
+// FINAL OUTPUT
 console.log('\n' + '='.repeat(60));
-console.log('📊 VALIDATION RESULTS');
+console.log('📊 SCHEMA VALIDATION RESULTS');
 console.log('='.repeat(60) + '\n');
 
-results.forEach((result) => {
-  const icon = result.valid ? '✅' : '❌';
-  console.log(`${icon} ${result.schema}`);
-  
-  if (result.errors.length > 0) {
-    console.log('   ❌ Errors:');
-    result.errors.forEach((error) => console.log(`     - ${error}`));
+for (const r of results) {
+  console.log(`${r.valid ? '✅' : '❌'} ${r.schema}`);
+
+  if (r.errors.length > 0) {
+    console.log('   ❌ ERRORS:');
+    r.errors.forEach(e => console.log(`     - ${e}`));
   }
-  
-  if (result.warnings.length > 0) {
-    console.log('   ℹ️  Schema Info:');
-    result.warnings.forEach((warning) => console.log(`     • ${warning}`));
+
+  if (r.warnings.length > 0) {
+    console.log('   ℹ️ INFO:');
+    r.warnings.forEach(w => console.log(`     - ${w}`));
   }
-  
-  if (result.valid && result.errors.length === 0) {
-    console.log('   ✅ Schema compiled successfully');
-  }
-  
+
   console.log('');
-});
-
-const allValid = results.every((r) => r.valid);
-const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
-
-console.log('='.repeat(60));
-if (allValid && totalErrors === 0) {
-  console.log('✅ All schemas are valid and compiled successfully!');
-  console.log('📝 Note: Field validation is done via TypeScript compilation.');
-  console.log('   If npm run build passes, all fields are correctly defined.\n');
-  process.exit(0);
-} else {
-  console.log(`❌ Validation failed with ${totalErrors} error(s)`);
-  process.exit(1);
 }
 
+const allValid = results.every(r => r.valid);
+
+console.log('='.repeat(60));
+if (allValid) {
+  console.log('🎉 ALL SCHEMAS COMPILE CORRECTLY!\n');
+  process.exit(0);
+} else {
+  console.log('❌ Some schemas failed validation.\n');
+  process.exit(1);
+}
