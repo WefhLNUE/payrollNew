@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HrRecruitmentModule } from '../hr-recruitment/hr-recruitment.module';
 import { LeavesModule } from '../leaves-subsystem/leaves/leaves.module';
+import { Employee, EmployeeSchema } from '../employee-profile-new/employee-profile/models/employee.schema';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -15,6 +16,10 @@ dotenv.config();
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGO_URI as string),
+    // Register Employee schema to resolve references
+    MongooseModule.forFeature([
+      { name: Employee.name, schema: EmployeeSchema },
+    ]),
     HrRecruitmentModule,
     LeavesModule,
   ],
