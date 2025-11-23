@@ -7,9 +7,9 @@
 [submodule "employee-profile"]
 	path = src/employee-profile
 	url = https://github.com/WefhLNUE/src/employee-profile
-[submodule "Time-management-system"]
-	path = src/Time-management-system
-	url = https://github.com/WefhLNUE/src/Time-management-system
+[submodule "time-management"]
+	path = src/time-management
+	url = https://github.com/WefhLNUE/src/time-management
 [submodule "recruitment"]
 	path = src/recruitment
 	url = https://github.com/WefhLNUE/src/recruitment
