@@ -16,6 +16,6 @@
 [submodule "payroll-configuration"]
 	path = src/payroll-configuration
 	url = https://github.com/WefhLNUE/src/payroll-configuration.git
-[submodule "Payroll-Processing-Execution-subSystem"]
-	path = src/Payroll-Processing-Execution-subSystem
-	url = https://github.com/WefhLNUE/src/Payroll-Processing-Execution-subSystem
+[submodule "payroll-execution"]
+	path = src/payroll-execution
+	url = https://github.com/WefhLNUE/src/payroll-execution
