@@ -4,9 +4,9 @@
 [submodule "leaves-subsystem"]
 	path = src/leaves-subsystem
 	url = https://github.com/WefhLNUE/src/leaves-subsystem
-[submodule "employee-profile-new"]
-	path = src/employee-profile-new
-	url = https://github.com/WefhLNUE/src/employee-profile-new
+[submodule "employee-profile"]
+	path = src/employee-profile
+	url = https://github.com/WefhLNUE/src/employee-profile
 [submodule "Time-management-system"]
 	path = src/Time-management-system
 	url = https://github.com/WefhLNUE/src/Time-management-system
