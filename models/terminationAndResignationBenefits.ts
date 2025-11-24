@@ -4,15 +4,17 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import {  EmployeeProfile as Employee} from '../../employee-profile/models/employee-profile.schema';
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
 
-export type signingBonusDocument = HydratedDocument<signingBonus>
+export type terminationAndResignationBenefitsDocument = HydratedDocument<terminationAndResignationBenefits>
 
 @Schema({ timestamps: true })
-export class signingBonus {
+export class terminationAndResignationBenefits {
     @Prop({ required: true, unique: true })
-    positionName: string; // only onboarding bonus based on position like:  Junior TA, Mid TA, Senior TA
+    name: string; // termination/resignation name like:  End of Service Gratuity.
     @Prop({ required: true, min: 0 })
     amount: number;
-    @Prop({ required: true, type: String, enum: ConfigStatus, default: ConfigStatus.DRAFT })
+    @Prop()
+    terms?: string;
+    @Prop({ required: true, type: String, enum: ConfigStatus,default:ConfigStatus.DRAFT })
     status: ConfigStatus;// draft, approved, rejected
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
@@ -22,6 +24,8 @@ export class signingBonus {
     @Prop({})
     approvedAt?: Date
 
+
+
 }
 
-export const signingBonusSchema = SchemaFactory.createForClass(signingBonus);
+export const terminationAndResignationBenefitsSchema = SchemaFactory.createForClass(terminationAndResignationBenefits);
