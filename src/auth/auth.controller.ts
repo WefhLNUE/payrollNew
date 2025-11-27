@@ -10,7 +10,6 @@ import {
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-// import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { RegisterEmployeeDto } from '../employee-profile/dto/register-employee.dto';
 
