@@ -67,6 +67,7 @@ export class AuthService {
             roles: user.systemRole?.roles ?? [],
             permissions: user.systemRole?.permissions ?? [],
             primaryDepartmentId: user.primaryDepartmentId,
+            employeeNumber: user.employeeNumber,
         };
 
         return {
