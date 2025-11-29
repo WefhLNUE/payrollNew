@@ -8,6 +8,7 @@ import { EmployeeProfile } from '../employee-profile/models/employee-profile.sch
 import { EmployeeSystemRole } from '../employee-profile/models/employee-system-role.schema';
 import { RegisterEmployeeDto } from '../employee-profile/dto/register-employee.dto';
 import { EmployeeProfileService } from '../employee-profile/employee-profile.service';
+import { permission } from 'process';
 
 type EmployeeDocument = HydratedDocument<EmployeeProfile>;
 type RoleDocument = HydratedDocument<EmployeeSystemRole>;
@@ -43,6 +44,8 @@ export class AuthService {
         sub: employee._id,
         workEmail: employee.workEmail,
         roles: roleDoc.roles,
+        permissions: roleDoc.permissions,
+        employeeNumber: employee.employeeNumber,
     };
 
     const accessToken = this.jwtService.sign(payload);
