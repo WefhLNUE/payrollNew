@@ -1,4 +1,3 @@
-// Placeholder - Waiting for content
 
 import { Prop, Schema, SchemaFactory, } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
@@ -9,12 +8,12 @@ export type payrollPoliciesDocument = HydratedDocument<payrollPolicies>
 
 @Schema({ timestamps: true })
 class RuleDefinition {
-    @Prop({ required: false, min: 0, max: 100 })
-    percentage?: number;
-    @Prop({ required: false, min: 0 })
-    fixedAmount?: number;
-    @Prop({ required: false, min: 1 })
-    threshold?: number;
+    @Prop({ required: true, min: 0, max: 100 })
+    percentage: number;
+    @Prop({ required: true, min: 0 })
+    fixedAmount: number;
+    @Prop({ required: true, min: 1 })
+    thresholdAmount: number;
 }
 const RuleDefinitionSchema = SchemaFactory.createForClass(RuleDefinition)
 
@@ -46,13 +45,7 @@ export class payrollPolicies {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
     approvedBy?: mongoose.Types.ObjectId;
     @Prop({})
-    approvedAt?: Date;
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
-    rejectedBy?: mongoose.Types.ObjectId;
-    @Prop({})
-    rejectedAt?: Date;
-    @Prop({})
-    rejectionReason?: string;
+    approvedAt?: Date
 
 }
 
