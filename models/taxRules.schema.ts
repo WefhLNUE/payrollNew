@@ -1,21 +1,25 @@
+// Placeholder - Waiting for content
 
 import { Prop, Schema, SchemaFactory, } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import {  EmployeeProfile as Employee} from '../../employee-profile/Models/employee-profile.schema';
 import { ConfigStatus } from '../enums/payroll-configuration-enums';
 
-export type payTypeDocument = HydratedDocument<payType>
-
+export type taxRulesDocument = HydratedDocument<taxRules>
 
 @Schema({ timestamps: true })
-export class payType {
+export class taxRules {
     @Prop({ required: true, unique: true })
-    type: string;
-    @Prop({ required: true, min: 6000 })
-    amount: number;
+    name: string;
+    @Prop()
+    description?: string;
+    @Prop({ required: true, min: 0 })
+    rate: number;// tax rate in percentage
+
     @Prop({ required: true, type: String, enum: ConfigStatus,default:ConfigStatus.DRAFT })
     status: ConfigStatus;// draft, approved, rejected
     
+
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
     createdBy?: mongoose.Types.ObjectId;
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
@@ -23,6 +27,7 @@ export class payType {
     @Prop({})
     approvedAt?: Date
 
+
 }
 
-export const payTypeSchema = SchemaFactory.createForClass(payType);
+export const taxRulesSchema = SchemaFactory.createForClass(taxRules);

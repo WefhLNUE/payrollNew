@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { PayrollConfigurationController } from './payroll-configuration.controller';
 
 describe('PayrollConfigurationController', () => {
@@ -9,7 +10,9 @@ describe('PayrollConfigurationController', () => {
       controllers: [PayrollConfigurationController],
     }).compile();
 
-    controller = module.get<PayrollConfigurationController>(PayrollConfigurationController);
+    controller = module.get<PayrollConfigurationController>(
+      PayrollConfigurationController,
+    );
   });
 
   it('should be defined', () => {
