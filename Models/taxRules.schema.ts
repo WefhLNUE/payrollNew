@@ -18,8 +18,12 @@ export class taxRules {
     @Prop({ required: true, type: String, enum: ConfigStatus,default:ConfigStatus.DRAFT })
     status: ConfigStatus;// draft, approved, rejected
     
+<<<<<<< HEAD:models/taxRules.schema.ts
 
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
+=======
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
+>>>>>>> 37568b1553989015436e4edfb85ad671bc5507ec:Models/PayType.schema.ts
     createdBy?: mongoose.Types.ObjectId;
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
     approvedBy?: mongoose.Types.ObjectId;
