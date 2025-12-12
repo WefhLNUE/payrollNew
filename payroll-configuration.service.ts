@@ -1,29 +1,20 @@
 import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
-
 import { InjectModel } from '@nestjs/mongoose';
-
 import mongoose, { Model, FilterQuery, Types } from 'mongoose';
-
 import { ConfigStatus, PolicyType } from './enums/payroll-configuration-enums';
 
 import { signingBonus } from './Models/SigningBonus.schema';
-
 import { taxRules } from './Models/taxRules.schema';
-
 import { terminationAndResignationBenefits } from './Models/terminationAndResignationBenefits';
-
 import { allowance, allowanceDocument } from './Models/allowance.schema';
-
 import {
   CompanyWideSettings,
   CompanyWideSettingsDocument,
 } from './Models/CompanyWideSettings.schema';
-
 import {
   insuranceBrackets,
   insuranceBracketsDocument,
 } from './Models/insuranceBrackets.schema';
-
 import { payType, payTypeDocument } from './Models/PayType.schema';
 import {
   CreatePayTypeDto,
@@ -41,7 +32,7 @@ import {
   payrollPolicies,
   payrollPoliciesDocument,
 } from './Models/payrollPolicies.schema';
-import { PayGrade, PayGradeDocument } from './Models/payGrades.schema';
+import { payGrade, payGradeDocument } from './Models/payGrades.schema';
 
 type AllowancePayload = Pick<allowance, 'name' | 'amount'> & {
   createdBy?: string;
@@ -86,9 +77,9 @@ export class PayrollConfigurationService {
     @InjectModel(payrollPolicies.name)
     private readonly payrollPoliciesModel: Model<payrollPoliciesDocument>,
 
-    @InjectModel(PayGrade.name)
-    private readonly payGradeModel: Model<PayGradeDocument>,
-  ) { }
+    @InjectModel(payGrade.name)
+    private readonly payGradeModel: Model<payGradeDocument>,
+  ) {}
 
   // ------- Signing Bonus -------
   async createSigningBonus(dto: any) {
@@ -333,7 +324,7 @@ export class PayrollConfigurationService {
 
   async createPayGrade(
     createDto: CreatePayGradeDto,
-  ): Promise<PayGradeDocument> {
+  ): Promise<payGradeDocument> {
     const exists = await this.payGradeModel
       .findOne({ grade: createDto.grade })
       .lean()
@@ -357,8 +348,8 @@ export class PayrollConfigurationService {
 
   async getAllPayGrades(
     status?: ConfigStatus,
-  ): Promise<PayGradeDocument[]> {
-    const filter: FilterQuery<PayGradeDocument> = {};
+  ): Promise<payGradeDocument[]> {
+    const filter: FilterQuery<payGradeDocument> = {};
 
     if (status) {
       filter.status = status;
@@ -367,7 +358,7 @@ export class PayrollConfigurationService {
     return this.payGradeModel.find(filter).sort({ grade: 1 }).exec();
   }
 
-  async getPayGradeById(id: string): Promise<PayGradeDocument> {
+  async getPayGradeById(id: string): Promise<payGradeDocument> {
     const payGradeDoc = await this.payGradeModel.findById(id).exec();
 
     if (!payGradeDoc) {
@@ -380,7 +371,7 @@ export class PayrollConfigurationService {
   async updatePayGrade(
     id: string,
     updateDto: UpdatePayGradeDto,
-  ): Promise<PayGradeDocument> {
+  ): Promise<payGradeDocument> {
     const payGradeDoc = await this.getPayGradeById(id);
 
     if (payGradeDoc.status !== ConfigStatus.DRAFT) {
@@ -423,7 +414,7 @@ export class PayrollConfigurationService {
   async approvePayGrade(
     id: string,
     approvedBy: string,
-  ): Promise<PayGradeDocument> {
+  ): Promise<payGradeDocument> {
     const payGradeDoc = await this.getPayGradeById(id);
 
     if (payGradeDoc.status !== ConfigStatus.DRAFT) {
@@ -446,7 +437,7 @@ export class PayrollConfigurationService {
     id: string,
     rejectedBy: string,
     reason: string,
-  ): Promise<PayGradeDocument> {
+  ): Promise<payGradeDocument> {
     const payGradeDoc = await this.getPayGradeById(id);
 
     if (payGradeDoc.status !== ConfigStatus.DRAFT) {

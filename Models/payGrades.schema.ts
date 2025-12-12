@@ -21,7 +21,13 @@ export class payGrade {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeProfile' })
     approvedBy?: mongoose.Types.ObjectId;
     @Prop({})
-    approvedAt?: Date
+    approvedAt?: Date;
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'EmployeeProfile' })
+    rejectedBy?: mongoose.Types.ObjectId;
+    @Prop({})
+    rejectedAt?: Date;
+    @Prop({})
+    rejectionReason?: string;
 
 }
 
