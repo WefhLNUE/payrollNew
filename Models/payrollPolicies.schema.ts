@@ -45,7 +45,13 @@ export class payrollPolicies {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
     approvedBy?: mongoose.Types.ObjectId;
     @Prop({})
-    approvedAt?: Date
+    approvedAt?: Date;
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
+    rejectedBy?: mongoose.Types.ObjectId;
+    @Prop({})
+    rejectedAt?: Date;
+    @Prop({})
+    rejectionReason?: string;
 
 }
 
