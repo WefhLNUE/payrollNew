@@ -308,28 +308,35 @@ export class PayrollConfigurationService {
   async createPayType(
     createDto: CreatePayTypeDto,
   ): Promise<payTypeDocument> {
-    const exists = await this.payTypeModel
-      .findOne({ type: createDto.type })
-      .lean()
-      .exec();
-    if (exists) {
-      throw new ConflictException(
-        `Pay type "${createDto.type}" already exists`,
-      );
-    }
+    try {
+      console.log('Attempting to create Pay Type:', createDto.type);
+      const exists = await this.payTypeModel
+        .findOne({ type: createDto.type })
+        .lean()
+        .exec();
+      if (exists) {
+        throw new ConflictException(
+          `Pay type "${createDto.type}" already exists`,
+        );
+      }
 
-    // Validate description: only validate length if description is actually provided and not empty
-    if (createDto.description && createDto.description.trim().length > 0 && createDto.description.length < 10) {
-      throw new BadRequestException(
-        'Description must be at least 10 characters if provided',
-      );
-    }
+      // Validate description: only validate length if description is actually provided and not empty
+      if (createDto.description && createDto.description.trim().length > 0 && createDto.description.length < 10) {
+        throw new BadRequestException(
+          'Description must be at least 10 characters if provided',
+        );
+      }
 
-    const created = new this.payTypeModel({
-      ...createDto,
-      status: ConfigStatus.DRAFT,
-    });
-    return created.save();
+      const created = await this.payTypeModel.create({
+        ...createDto,
+        status: ConfigStatus.DRAFT,
+      });
+      console.log(`Successfully created Pay Type: ${created._id}`);
+      return created;
+    } catch (error) {
+      console.error('Error creating pay type:', error);
+      throw new BadRequestException(error.message || 'Failed to create pay type');
+    }
   }
 
   async getAllPayTypes(
@@ -466,32 +473,29 @@ export class PayrollConfigurationService {
 
   async createPayGrade(
     createDto: CreatePayGradeDto,
-  ): Promise<any> {
+  ): Promise<payGradeDocument> {
     try {
+      console.log('Attempting to create Pay Grade:', createDto.grade);
+      this.validateSalaryRules(createDto.baseSalary, createDto.grossSalary);
+
       const exists = await this.payGradeModel
         .findOne({ grade: createDto.grade })
+        .lean()
         .exec();
-
       if (exists) {
         throw new ConflictException(
           `Pay grade "${createDto.grade}" already exists`,
         );
       }
 
-      this.validateSalaryRules(createDto.baseSalary, createDto.grossSalary);
-
-      const created = new this.payGradeModel({
+      const created = await this.payGradeModel.create({
         ...createDto,
         status: ConfigStatus.DRAFT,
       });
-
-      return await created.save();
+      console.log(`Successfully created Pay Grade: ${created._id}`);
+      return created;
     } catch (error) {
-      console.error('Error in createPayGrade:', error);
-      if (error instanceof ConflictException || error instanceof BadRequestException) {
-        throw error;
-      }
-      // Re-throw as BadRequest with details to avoid 500
+      console.error('Error creating pay grade:', error);
       throw new BadRequestException(error.message || 'Failed to create pay grade');
     }
   }
@@ -686,35 +690,40 @@ export class PayrollConfigurationService {
   async createPayrollPolicy(
     createDto: CreatePayrollPolicyDto,
   ): Promise<payrollPoliciesDocument> {
-    // Prevent duplicate policyName + policyType combination
-    const exists = await this.payrollPoliciesModel
-      .findOne({
-        policyName: createDto.policyName,
-        policyType: createDto.policyType,
-      })
-      .lean()
-      .exec();
+    try {
+      console.log('Attempting to create Payroll Policy:', createDto.policyName);
+      // Validate unique constraint manually for better error message
+      const exists = await this.payrollPoliciesModel
+        .findOne({
+          policyName: createDto.policyName,
+          policyType: createDto.policyType,
+        })
+        .lean()
+        .exec();
 
-    if (exists) {
-      throw new ConflictException(
-        `Payroll policy with name "${createDto.policyName}" and type "${createDto.policyType}" already exists`,
+      if (exists) {
+        throw new ConflictException(
+          `Payroll policy with name "${createDto.policyName}" and type "${createDto.policyType}" already exists`,
+        );
+      }
+
+      this.validateEffectiveDate(createDto.effectiveDate);
+      this.validateRuleDefinition(
+        createDto.ruleDefinition,
+        createDto.policyType,
       );
+
+      const created = await this.payrollPoliciesModel.create({
+        ...createDto,
+        effectiveDate: new Date(createDto.effectiveDate),
+        status: ConfigStatus.DRAFT,
+      });
+      console.log(`Successfully created Payroll Policy: ${created._id}`);
+      return created;
+    } catch (error) {
+      console.error('Error creating payroll policy:', error);
+      throw new BadRequestException(error.message || 'Failed to create payroll policy');
     }
-
-    // Validate effective date
-    this.validateEffectiveDate(createDto.effectiveDate);
-
-    // Validate rule definition
-    this.validateRuleDefinition(createDto.ruleDefinition, createDto.policyType);
-
-    // Convert effectiveDate string to Date object
-    const created = new this.payrollPoliciesModel({
-      ...createDto,
-      effectiveDate: new Date(createDto.effectiveDate),
-      status: ConfigStatus.DRAFT,
-    });
-
-    return created.save();
   }
 
   async getAllPayrollPolicies(
@@ -853,12 +862,19 @@ export class PayrollConfigurationService {
   /* -------------------------------------------------------------------------- */
 
   async createAllowance(payload: AllowancePayload) {
-    const created = await this.allowanceModel.create({
-      ...payload,
-      createdBy: this.toObjectId(payload.createdBy),
-      status: ConfigStatus.DRAFT,
-    });
-    return created.toObject();
+    try {
+      console.log('Attempting to create Allowance:', payload.name);
+      const created = await this.allowanceModel.create({
+        ...payload,
+        createdBy: this.toObjectId(payload.createdBy),
+        status: ConfigStatus.DRAFT,
+      });
+      console.log(`Successfully created Allowance: ${created._id}`);
+      return created.toObject();
+    } catch (error) {
+      console.error('Error creating allowance:', error);
+      throw new BadRequestException(error.message || 'Failed to create allowance');
+    }
   }
 
   async listAllowances(status?: ConfigStatus) {
@@ -962,17 +978,18 @@ export class PayrollConfigurationService {
 
   async createInsuranceBracket(payload: InsurancePayload) {
     try {
+      console.log('Attempting to create Insurance Bracket:', payload.name);
       this.ensureSalaryRange(payload.minSalary, payload.maxSalary);
-      const created = new this.insuranceModel({
+      const created = await this.insuranceModel.create({
         ...payload,
         amount: payload.amount ?? 0,
         createdBy: this.toObjectId(payload.createdBy),
         status: ConfigStatus.DRAFT,
       });
-      return await created.save();
+      console.log(`Successfully created Insurance Bracket: ${created._id}`);
+      return created.toObject();
     } catch (error) {
-      console.error('Error in createInsuranceBracket:', error);
-      if (error instanceof BadRequestException) throw error;
+      console.error('Error creating insurance bracket:', error);
       throw new BadRequestException(error.message || 'Failed to create insurance bracket');
     }
   }
