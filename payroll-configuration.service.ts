@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, FilterQuery, Types } from 'mongoose';
 import { ConfigStatus, PolicyType } from './enums/payroll-configuration-enums';
 
-import { signingBonus } from './Models/SigningBonus.schema';
+import { signingBonus } from './Models/signingBonus';
 import { taxRules } from './Models/taxRules.schema';
 import { terminationAndResignationBenefits } from './Models/terminationAndResignationBenefits';
 import { allowance, allowanceDocument } from './Models/allowance.schema';
@@ -15,7 +15,7 @@ import {
   insuranceBrackets,
   insuranceBracketsDocument,
 } from './Models/insuranceBrackets.schema';
-import { payType, payTypeDocument } from './Models/PayType.schema';
+import { payType, payTypeDocument } from './Models/payType';
 import {
   CreatePayTypeDto,
   UpdatePayTypeDto,
@@ -28,22 +28,19 @@ import {
   CreatePayGradeDto,
   UpdatePayGradeDto,
 } from './dto/pay-grade';
+import { CreateAllowanceDto, UpdateAllowanceDto } from './dto/allowance';
+import { CreateSigningBonusDto, UpdateSigningBonusDto } from './dto/signing-bonus';
+import { CreateTaxRuleDto, UpdateTaxRuleDto } from './dto/tax-rule';
+import { CreateTerminationBenefitDto, UpdateTerminationBenefitDto } from './dto/termination-benefit';
+import { CreateInsuranceBracketDto, UpdateInsuranceBracketDto } from './dto/insurance-bracket';
+import { CompanyWideSettingsDto } from './dto/company-settings';
 import {
   payrollPolicies,
   payrollPoliciesDocument,
 } from './Models/payrollPolicies.schema';
 import { payGrade, payGradeDocument } from './Models/payGrades.schema';
 
-type AllowancePayload = Pick<allowance, 'name' | 'amount'> & {
-  createdBy?: string;
-};
-
-type InsurancePayload = Pick<
-  insuranceBrackets,
-  'name' | 'amount' | 'minSalary' | 'maxSalary' | 'employeeRate' | 'employerRate'
-> & {
-  createdBy?: string;
-};
+// Redundant payload types removed for DTO consistency
 
 interface UpdateStatusPayload {
   status: ConfigStatus;
@@ -79,15 +76,15 @@ export class PayrollConfigurationService {
 
     @InjectModel(payGrade.name)
     private readonly payGradeModel: Model<payGradeDocument>,
-  ) {}
+  ) { }
 
   // ------- Signing Bonus -------
-  async createSigningBonus(dto: any) {
-    dto.status = ConfigStatus.DRAFT;
-    return this.signingBonusModel.create(dto);
+  async createSigningBonus(dto: CreateSigningBonusDto) {
+    const data = { ...dto, status: ConfigStatus.DRAFT };
+    return this.signingBonusModel.create(data);
   }
 
-  async updateSigningBonus(id: string, dto: any) {
+  async updateSigningBonus(id: string, dto: UpdateSigningBonusDto) {
     const doc = await this.signingBonusModel.findById(id);
     if (!doc) throw new BadRequestException('Not found');
     if (doc.status !== ConfigStatus.DRAFT)
@@ -104,13 +101,22 @@ export class PayrollConfigurationService {
     return this.signingBonusModel.findById(id);
   }
 
-  // ------- Tax Rules -------
-  async createTaxRule(dto: any) {
-    dto.status = ConfigStatus.DRAFT;
-    return this.taxRulesModel.create(dto);
+  async deleteSigningBonus(id: string): Promise<void> {
+    const doc = await this.signingBonusModel.findById(id);
+    if (!doc) throw new BadRequestException('Not found');
+    if (doc.status !== ConfigStatus.DRAFT) {
+      throw new BadRequestException('Can only delete configurations in DRAFT status');
+    }
+    await this.signingBonusModel.deleteOne({ _id: id }).exec();
   }
 
-  async updateTaxRule(id: string, dto: any) {
+  // ------- Tax Rules -------
+  async createTaxRule(dto: CreateTaxRuleDto) {
+    const data = { ...dto, status: ConfigStatus.DRAFT };
+    return this.taxRulesModel.create(data);
+  }
+
+  async updateTaxRule(id: string, dto: UpdateTaxRuleDto) {
     const doc = await this.taxRulesModel.findById(id);
     if (!doc) throw new BadRequestException('Not found');
     if (doc.status !== ConfigStatus.DRAFT)
@@ -127,13 +133,22 @@ export class PayrollConfigurationService {
     return this.taxRulesModel.findById(id);
   }
 
-  // ------- Termination Benefits -------
-  async createTerminationBenefit(dto: any) {
-    dto.status = ConfigStatus.DRAFT;
-    return this.termModel.create(dto);
+  async deleteTaxRule(id: string): Promise<void> {
+    const doc = await this.taxRulesModel.findById(id);
+    if (!doc) throw new BadRequestException('Not found');
+    if (doc.status !== ConfigStatus.DRAFT) {
+      throw new BadRequestException('Can only delete configurations in DRAFT status');
+    }
+    await this.taxRulesModel.deleteOne({ _id: id }).exec();
   }
 
-  async updateTerminationBenefit(id: string, dto: any) {
+  // ------- Termination Benefits -------
+  async createTerminationBenefit(dto: CreateTerminationBenefitDto) {
+    const data = { ...dto, status: ConfigStatus.DRAFT };
+    return this.termModel.create(data);
+  }
+
+  async updateTerminationBenefit(id: string, dto: UpdateTerminationBenefitDto) {
     const doc = await this.termModel.findById(id);
     if (!doc) throw new BadRequestException('Not found');
     if (doc.status !== ConfigStatus.DRAFT)
@@ -150,6 +165,15 @@ export class PayrollConfigurationService {
     return this.termModel.findById(id);
   }
 
+  async deleteTerminationBenefit(id: string): Promise<void> {
+    const doc = await this.termModel.findById(id);
+    if (!doc) throw new BadRequestException('Not found');
+    if (doc.status !== ConfigStatus.DRAFT) {
+      throw new BadRequestException('Can only delete configurations in DRAFT status');
+    }
+    await this.termModel.deleteOne({ _id: id }).exec();
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                               Pay Types API                                */
   /* -------------------------------------------------------------------------- */
@@ -164,13 +188,6 @@ export class PayrollConfigurationService {
     if (exists) {
       throw new ConflictException(
         `Pay type "${createDto.type}" already exists`,
-      );
-    }
-
-    // Validate description: if provided, must be at least 10 characters
-    if (createDto.description && createDto.description.length < 10) {
-      throw new BadRequestException(
-        'Description must be at least 10 characters if provided',
       );
     }
 
@@ -215,15 +232,6 @@ export class PayrollConfigurationService {
       );
     }
 
-    // Validate description: if provided, must be at least 10 characters
-    if (updateDto.description !== undefined) {
-      if (updateDto.description && updateDto.description.length < 10) {
-        throw new BadRequestException(
-          'Description must be at least 10 characters if provided',
-        );
-      }
-    }
-
     Object.assign(payTypeDoc, updateDto);
     return payTypeDoc.save();
   }
@@ -263,9 +271,6 @@ export class PayrollConfigurationService {
     payTypeDoc.status = ConfigStatus.APPROVED;
     payTypeDoc.approvedBy = new Types.ObjectId(approvedBy);
     payTypeDoc.approvedAt = new Date();
-    payTypeDoc.rejectedBy = undefined;
-    payTypeDoc.rejectedAt = undefined;
-    payTypeDoc.rejectionReason = undefined;
 
     return payTypeDoc.save();
   }
@@ -284,9 +289,6 @@ export class PayrollConfigurationService {
     }
 
     payTypeDoc.status = ConfigStatus.REJECTED;
-    payTypeDoc.rejectedBy = new Types.ObjectId(rejectedBy);
-    payTypeDoc.rejectedAt = new Date();
-    payTypeDoc.rejectionReason = reason;
     payTypeDoc.approvedBy = undefined;
     payTypeDoc.approvedAt = undefined;
 
@@ -426,9 +428,6 @@ export class PayrollConfigurationService {
     payGradeDoc.status = ConfigStatus.APPROVED;
     payGradeDoc.approvedBy = new Types.ObjectId(approvedBy);
     payGradeDoc.approvedAt = new Date();
-    payGradeDoc.rejectedBy = undefined;
-    payGradeDoc.rejectedAt = undefined;
-    payGradeDoc.rejectionReason = undefined;
 
     return payGradeDoc.save();
   }
@@ -447,9 +446,6 @@ export class PayrollConfigurationService {
     }
 
     payGradeDoc.status = ConfigStatus.REJECTED;
-    payGradeDoc.rejectedBy = new Types.ObjectId(rejectedBy);
-    payGradeDoc.rejectedAt = new Date();
-    payGradeDoc.rejectionReason = reason;
     payGradeDoc.approvedBy = undefined;
     payGradeDoc.approvedAt = undefined;
 
@@ -471,11 +467,11 @@ export class PayrollConfigurationService {
     // Validate that at least one field is provided
     const hasPercentage = ruleDefinition.percentage !== undefined && ruleDefinition.percentage !== null;
     const hasFixedAmount = ruleDefinition.fixedAmount !== undefined && ruleDefinition.fixedAmount !== null;
-    const hasThreshold = ruleDefinition.threshold !== undefined && ruleDefinition.threshold !== null;
+    const hasThreshold = ruleDefinition.thresholdAmount !== undefined && ruleDefinition.thresholdAmount !== null;
 
     if (!hasPercentage && !hasFixedAmount && !hasThreshold) {
       throw new BadRequestException(
-        'ruleDefinition must include at least one value (percentage, fixedAmount, or threshold)',
+        'ruleDefinition must include at least one value (percentage, fixedAmount, or thresholdAmount)',
       );
     }
 
@@ -500,8 +496,8 @@ export class PayrollConfigurationService {
     }
 
     if (hasThreshold) {
-      const threshold = ruleDefinition.threshold!;
-      if (threshold < 0) {
+      const thresholdAmount = ruleDefinition.thresholdAmount!;
+      if (thresholdAmount < 0) {
         throw new BadRequestException(
           'Threshold must be greater than or equal to 0',
         );
@@ -511,7 +507,7 @@ export class PayrollConfigurationService {
 
   private validateEffectiveDate(effectiveDate: string | Date): void {
     const date = typeof effectiveDate === 'string' ? new Date(effectiveDate) : effectiveDate;
-    
+
     if (isNaN(date.getTime())) {
       throw new BadRequestException('Invalid effective date');
     }
@@ -519,7 +515,7 @@ export class PayrollConfigurationService {
     // Effective date should not be too far in the past (more than 1 year)
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    
+
     if (date < oneYearAgo) {
       throw new BadRequestException(
         'Effective date cannot be more than 1 year in the past',
@@ -529,7 +525,7 @@ export class PayrollConfigurationService {
     // Effective date should not be too far in the future (more than 5 years)
     const fiveYearsFromNow = new Date();
     fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
-    
+
     if (date > fiveYearsFromNow) {
       throw new BadRequestException(
         'Effective date cannot be more than 5 years in the future',
@@ -682,9 +678,6 @@ export class PayrollConfigurationService {
     policy.status = ConfigStatus.APPROVED;
     policy.approvedBy = new Types.ObjectId(approvedBy);
     policy.approvedAt = new Date();
-    policy.rejectedBy = undefined;
-    policy.rejectedAt = undefined;
-    policy.rejectionReason = undefined;
 
     return policy.save();
   }
@@ -703,9 +696,6 @@ export class PayrollConfigurationService {
     }
 
     policy.status = ConfigStatus.REJECTED;
-    policy.rejectedBy = new Types.ObjectId(rejectedBy);
-    policy.rejectedAt = new Date();
-    policy.rejectionReason = reason;
     policy.approvedBy = undefined;
     policy.approvedAt = undefined;
 
@@ -716,10 +706,10 @@ export class PayrollConfigurationService {
   /*                               Allowances API                               */
   /* -------------------------------------------------------------------------- */
 
-  async createAllowance(payload: AllowancePayload) {
+  async createAllowance(dto: CreateAllowanceDto, creatorId?: string) {
     const created = await this.allowanceModel.create({
-      ...payload,
-      createdBy: this.toObjectId(payload.createdBy),
+      ...dto,
+      createdBy: this.toObjectId(creatorId),
       status: ConfigStatus.DRAFT,
     });
     return created.toObject();
@@ -734,18 +724,17 @@ export class PayrollConfigurationService {
     return this.findAllowanceOrFail(id);
   }
 
-  async updateAllowance(id: string, payload: Partial<AllowancePayload>) {
+  async updateAllowance(id: string, dto: UpdateAllowanceDto) {
     const record = await this.findAllowanceOrFail(id);
-    if (!record) {
-      throw new NotFoundException('Allowance not found');
-    }
     this.ensureDraft(record.status, 'Allowance');
-    if (payload.name !== undefined) record.name = payload.name;
-    if (payload.amount !== undefined) record.amount = payload.amount;
-    if (payload.createdBy !== undefined) {
-      record.createdBy = this.toObjectId(payload.createdBy);
-    }
+    record.set(dto);
     return record.save();
+  }
+
+  async deleteAllowance(id: string): Promise<void> {
+    const record = await this.findAllowanceOrFail(id);
+    this.ensureDraft(record.status, 'Allowance');
+    await this.allowanceModel.deleteOne({ _id: id }).exec();
   }
 
   async setAllowanceStatus(id: string, payload: UpdateStatusPayload) {
@@ -786,11 +775,11 @@ export class PayrollConfigurationService {
   /*                           Insurance brackets API                           */
   /* -------------------------------------------------------------------------- */
 
-  async createInsuranceBracket(payload: InsurancePayload) {
-    this.ensureSalaryRange(payload.minSalary, payload.maxSalary);
+  async createInsuranceBracket(dto: CreateInsuranceBracketDto, creatorId?: string) {
+    this.ensureSalaryRange(dto.minSalary, dto.maxSalary);
     const created = await this.insuranceModel.create({
-      ...payload,
-      createdBy: this.toObjectId(payload.createdBy),
+      ...dto,
+      createdBy: this.toObjectId(creatorId),
       status: ConfigStatus.DRAFT,
     });
     return created.toObject();
@@ -805,20 +794,16 @@ export class PayrollConfigurationService {
     return this.findInsuranceOrFail(id);
   }
 
-  async updateInsuranceBracket(id: string, payload: Partial<InsurancePayload>) {
+  async updateInsuranceBracket(id: string, dto: UpdateInsuranceBracketDto) {
     const record = await this.findInsuranceOrFail(id);
     this.ensureDraft(record.status, 'Insurance bracket');
-    if (payload.minSalary !== undefined || payload.maxSalary !== undefined) {
+    if (dto.minSalary !== undefined || dto.maxSalary !== undefined) {
       this.ensureSalaryRange(
-        payload.minSalary ?? record.minSalary,
-        payload.maxSalary ?? record.maxSalary,
+        dto.minSalary ?? record.minSalary,
+        dto.maxSalary ?? record.maxSalary,
       );
     }
-    record.set({
-      ...payload,
-      createdBy:
-        payload.createdBy !== undefined ? this.toObjectId(payload.createdBy) : record.createdBy,
-    });
+    record.set(dto);
     return record.save();
   }
 

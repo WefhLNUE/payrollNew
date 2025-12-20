@@ -6,10 +6,10 @@ import { PayrollConfigurationService } from './payroll-configuration.service';
 
 // Schemas (from your payrollModels folder)
 import { allowance, allowanceSchema } from './Models/allowance.schema';
-import { signingBonus, signingBonusSchema } from './Models/SigningBonus.schema';
+import { signingBonus, signingBonusSchema } from './Models/signingBonus';
 import { taxRules, taxRulesSchema } from './Models/taxRules.schema';
 import { insuranceBrackets, insuranceBracketsSchema } from './Models/insuranceBrackets.schema';
-import { payType, payTypeSchema } from './Models/PayType.schema';
+import { payType, payTypeSchema } from './Models/payType';
 import { payrollPolicies, payrollPoliciesSchema } from './Models/payrollPolicies.schema';
 import { terminationAndResignationBenefits, terminationAndResignationBenefitsSchema } from './Models/terminationAndResignationBenefits';
 import { CompanyWideSettings, CompanyWideSettingsSchema } from './Models/CompanyWideSettings.schema';

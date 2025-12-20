@@ -1,17 +1,13 @@
 import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConfigStatus, PayType } from '../../enums/payroll-configuration-enums';
+import { ConfigStatus } from '../../enums/payroll-configuration-enums';
 
 export class PayTypeResponseDto {
   @IsString()
   _id: string;
 
-  @IsEnum(PayType)
-  type: PayType;
-
-  @IsOptional()
   @IsString()
-  description?: string;
+  type: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -39,5 +35,3 @@ export class PayTypeResponseDto {
   @IsString()
   approvedAt?: string;
 }
-
-// FILE 7: Placeholder - Waiting for content

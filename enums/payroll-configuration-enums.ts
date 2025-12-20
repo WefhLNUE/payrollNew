@@ -12,17 +12,10 @@ export enum PolicyType {
     LEAVE = "Leave",
 }
 
+
 export enum Applicability {
     AllEmployees = "All Employees",
     FULL_TIME = "Full Time Employees",
     PART_TIME = "Part Time Employees",
     CONTRACTORS = "Contractors",
-}
-
-export enum PayType {
-    HOURLY = 'hourly',
-    DAILY = 'daily',
-    WEEKLY = 'weekly',
-    MONTHLY = 'monthly',
-    CONTRACT_BASED = 'contract_based',
 }

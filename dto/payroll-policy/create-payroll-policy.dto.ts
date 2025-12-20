@@ -16,20 +16,17 @@ import {
 } from '../../enums/payroll-configuration-enums';
 
 export class RuleDefinitionDto {
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  percentage?: number;
+  percentage: number;
 
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  fixedAmount?: number;
+  fixedAmount: number;
 
-  @IsOptional()
   @IsNumber()
-  @Min(0)
-  threshold?: number;
+  @Min(1)
+  thresholdAmount: number;
 }
 
 export class CreatePayrollPolicyDto {

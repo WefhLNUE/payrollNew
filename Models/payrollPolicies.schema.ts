@@ -1,7 +1,7 @@
 
 import { Prop, Schema, SchemaFactory, } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-// import {  EmployeeProfile as Employee} from '../../employee-profile/Models/employee-profile.schema';
+import { EmployeeProfile as Employee } from '../../employee-profile/Models/employee-profile.schema';
 import { Applicability, ConfigStatus, PolicyType } from '../enums/payroll-configuration-enums';
 
 export type payrollPoliciesDocument = HydratedDocument<payrollPolicies>
@@ -37,26 +37,19 @@ export class payrollPolicies {
     @Prop({ required: true, enum: Applicability, type: String })
     applicability: Applicability;
 
-    @Prop({ required: true, type: String, enum: ConfigStatus,default:ConfigStatus.DRAFT })
+    @Prop({ required: true, type: String, enum: ConfigStatus, default: ConfigStatus.DRAFT })
     status: ConfigStatus;// draft, approved, rejected
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
     createdBy?: mongoose.Types.ObjectId;
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Employee.name })
     approvedBy?: mongoose.Types.ObjectId;
     @Prop({})
-    approvedAt?: Date;
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'employee-profile' })
-    rejectedBy?: mongoose.Types.ObjectId;
-    @Prop({})
-    rejectedAt?: Date;
-    @Prop({})
-    rejectionReason?: string;
+    approvedAt?: Date
 
 }
 
 export const payrollPoliciesSchema = SchemaFactory.createForClass(payrollPolicies);
-
 
 
 

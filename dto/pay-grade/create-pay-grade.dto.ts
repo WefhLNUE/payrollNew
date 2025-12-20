@@ -12,8 +12,7 @@ import {
 
 @ValidatorConstraint({ name: 'GrossSalaryGteBaseSalary', async: false })
 export class GrossSalaryGteBaseSalaryConstraint
-  implements ValidatorConstraintInterface
-{
+  implements ValidatorConstraintInterface {
   validate(grossSalary: number, args: ValidationArguments): boolean {
     const { baseSalary } = args.object as CreatePayGradeDto;
     if (grossSalary === undefined || grossSalary === null) {
@@ -44,12 +43,4 @@ export class CreatePayGradeDto {
   @Min(6000)
   @Validate(GrossSalaryGteBaseSalaryConstraint)
   grossSalary: number;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsString()
-  positionId?: string;
 }

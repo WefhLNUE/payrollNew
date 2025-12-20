@@ -56,16 +56,4 @@ export class PayrollPolicyResponseDto {
   @IsOptional()
   @IsDateString()
   approvedAt?: string;
-
-  @IsOptional()
-  @IsString()
-  rejectedBy?: string;
-
-  @IsOptional()
-  @IsDateString()
-  rejectedAt?: string;
-
-  @IsOptional()
-  @IsString()
-  rejectionReason?: string;
 }
