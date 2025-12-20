@@ -27,13 +27,13 @@ export class AtLeastOneFieldConstraint implements ValidatorConstraintInterface {
 
     const hasPercentage = ruleDefinition.percentage !== undefined && ruleDefinition.percentage !== null;
     const hasFixedAmount = ruleDefinition.fixedAmount !== undefined && ruleDefinition.fixedAmount !== null;
-    const hasThreshold = ruleDefinition.threshold !== undefined && ruleDefinition.threshold !== null;
+    const hasThreshold = ruleDefinition.thresholdAmount !== undefined && ruleDefinition.thresholdAmount !== null;
 
     return hasPercentage || hasFixedAmount || hasThreshold;
   }
 
   defaultMessage(args: ValidationArguments) {
-    return 'ruleDefinition must include at least one value (percentage, fixedAmount, or threshold)';
+    return 'ruleDefinition must include at least one value (percentage, fixedAmount, or thresholdAmount)';
   }
 }
 

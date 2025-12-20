@@ -43,9 +43,8 @@ async function testSigningBonusDeletion() {
     try {
         // Create a signing bonus
         const createData = {
-            name: 'Test Signing Bonus',
+            positionName: 'Test Signing Bonus',
             amount: 5000,
-            description: 'Test bonus for deletion',
         };
 
         console.log('Creating signing bonus...');
@@ -81,7 +80,6 @@ async function testTerminationBenefitDeletion() {
         const createData = {
             name: 'Test Termination Benefit',
             amount: 10000,
-            description: 'Test benefit for deletion',
         };
 
         console.log('Creating termination benefit...');
@@ -156,7 +154,7 @@ async function testPayrollPolicyCreationValid() {
             effectiveDate: new Date().toISOString().split('T')[0], // Use today's date
             ruleDefinition: {
                 percentage: 50,
-                threshold: 160,
+                thresholdAmount: 160,
             },
             applicability: 'All Employees',
         };

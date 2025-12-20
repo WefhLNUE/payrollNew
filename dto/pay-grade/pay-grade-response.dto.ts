@@ -13,7 +13,7 @@ import {
   GrossSalaryGteBaseSalaryConstraint,
 } from './create-pay-grade.dto';
 
-export class PayGradeResponseDto {
+export class PayGradeResponseDto implements CreatePayGradeDto {
   @IsString()
   _id: string;
 
@@ -30,6 +30,14 @@ export class PayGradeResponseDto {
   @Min(6000)
   @Validate(GrossSalaryGteBaseSalaryConstraint)
   grossSalary: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  positionId?: string;
 
   @IsEnum(ConfigStatus)
   status: ConfigStatus;
@@ -52,3 +60,6 @@ export class PayGradeResponseDto {
   @IsString()
   approvedAt?: string;
 }
+
+
+// FILE 11: Placeholder - Waiting for content
