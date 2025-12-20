@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, FilterQuery, Types } from 'mongoose';
 import { ConfigStatus, PolicyType } from './enums/payroll-configuration-enums';
 
-import { signingBonus } from './Models/signingBonus';
+import { signingBonus } from './Models/signingBonus.schema';
 import { taxRules } from './Models/taxRules.schema';
 import { terminationAndResignationBenefits } from './Models/terminationAndResignationBenefits';
 import { allowance, allowanceDocument } from './Models/allowance.schema';
@@ -15,7 +15,7 @@ import {
     insuranceBrackets,
     insuranceBracketsDocument,
 } from './Models/insuranceBrackets.schema';
-import { payType, payTypeDocument } from './Models/payType';
+import { payType, payTypeDocument } from './Models/payType.schema';
 import {
     CreatePayTypeDto,
     UpdatePayTypeDto,
