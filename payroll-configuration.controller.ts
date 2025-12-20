@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { ConfigStatus, PolicyType } from './enums/payroll-configuration-enums';
 import { PayrollConfigurationService } from './payroll-configuration.service';
-import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import {
   CreatePayTypeDto,
@@ -31,6 +30,7 @@ import {
 import {
   ApproveConfigDto,
   RejectConfigDto,
+  ApprovalDto,
 } from './dto/approval.dto';
 import { CreateAllowanceDto, UpdateAllowanceDto } from './dto/allowance';
 import { CreateSigningBonusDto, UpdateSigningBonusDto } from './dto/signing-bonus';
@@ -38,9 +38,13 @@ import { CreateTaxRuleDto, UpdateTaxRuleDto } from './dto/tax-rule';
 import { CreateTerminationBenefitDto, UpdateTerminationBenefitDto } from './dto/termination-benefit';
 import { CreateInsuranceBracketDto, UpdateInsuranceBracketDto } from './dto/insurance-bracket';
 import { CompanyWideSettingsDto } from './dto/company-settings';
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
 
 @Controller('payroll-configuration')
-@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 export class PayrollConfigurationController {
   constructor(
     private readonly payrollConfigurationService: PayrollConfigurationService,
@@ -66,8 +70,8 @@ export class PayrollConfigurationController {
   }
 
   @Get('signing-bonus')
-  getAllSigningBonus() {
-    return this.payrollConfigurationService.getAllSigningBonus();
+  getAllSigningBonus(@Query('status') status?: ConfigStatus) {
+    return this.payrollConfigurationService.getAllSigningBonus(status);
   }
 
   @Get('signing-bonus/:id')
@@ -77,10 +81,27 @@ export class PayrollConfigurationController {
 
   @Delete('signing-bonus/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+<<<<<<< HEAD
   deleteSigningBonus(@Param('id') id: string) {
     return this.payrollConfigurationService.deleteSigningBonus(id);
   }
 
+=======
+  deleteSigningBonus(@Param('id') id: string): Promise<void> {
+    return this.payrollConfigurationService.deleteSigningBonus(id);
+  }
+
+  @Post('signing-bonus/:id/approve')
+  approveSigningBonus(@Param('id') id: string, @Body() dto: ApproveConfigDto) {
+    return this.payrollConfigurationService.approveSigningBonus(id, dto.approvedBy);
+  }
+
+  @Post('signing-bonus/:id/reject')
+  rejectSigningBonus(@Param('id') id: string, @Body() dto: RejectConfigDto) {
+    return this.payrollConfigurationService.rejectSigningBonus(id, dto.rejectedBy, dto.reason);
+  }
+
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
   /* -------------------------------------------------------------------------- */
   /*                               Tax Rules API                                */
   /* -------------------------------------------------------------------------- */
@@ -96,8 +117,8 @@ export class PayrollConfigurationController {
   }
 
   @Get('tax-rule')
-  getAllTaxRules() {
-    return this.payrollConfigurationService.getAllTaxRules();
+  getAllTaxRules(@Query('status') status?: ConfigStatus) {
+    return this.payrollConfigurationService.getAllTaxRules(status);
   }
 
   @Get('tax-rule/:id')
@@ -107,10 +128,27 @@ export class PayrollConfigurationController {
 
   @Delete('tax-rule/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+<<<<<<< HEAD
   deleteTaxRule(@Param('id') id: string) {
     return this.payrollConfigurationService.deleteTaxRule(id);
   }
 
+=======
+  deleteTaxRule(@Param('id') id: string): Promise<void> {
+    return this.payrollConfigurationService.deleteTaxRule(id);
+  }
+
+  @Post('tax-rule/:id/approve')
+  approveTaxRule(@Param('id') id: string, @Body() dto: ApproveConfigDto) {
+    return this.payrollConfigurationService.approveTaxRule(id, dto.approvedBy);
+  }
+
+  @Post('tax-rule/:id/reject')
+  rejectTaxRule(@Param('id') id: string, @Body() dto: RejectConfigDto) {
+    return this.payrollConfigurationService.rejectTaxRule(id, dto.rejectedBy, dto.reason);
+  }
+
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
   /* -------------------------------------------------------------------------- */
   /*                          Termination Benefits API                          */
   /* -------------------------------------------------------------------------- */
@@ -126,8 +164,8 @@ export class PayrollConfigurationController {
   }
 
   @Get('termination-benefit')
-  getAllTerminationBenefits() {
-    return this.payrollConfigurationService.getAllTerminationBenefits();
+  getAllTerminationBenefits(@Query('status') status?: ConfigStatus) {
+    return this.payrollConfigurationService.getAllTerminationBenefits(status);
   }
 
   @Get('termination-benefit/:id')
@@ -137,10 +175,27 @@ export class PayrollConfigurationController {
 
   @Delete('termination-benefit/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
+<<<<<<< HEAD
   deleteTerminationBenefit(@Param('id') id: string) {
     return this.payrollConfigurationService.deleteTerminationBenefit(id);
   }
 
+=======
+  deleteTerminationBenefit(@Param('id') id: string): Promise<void> {
+    return this.payrollConfigurationService.deleteTerminationBenefit(id);
+  }
+
+  @Post('termination-benefit/:id/approve')
+  approveTerminationBenefit(@Param('id') id: string, @Body() dto: ApproveConfigDto) {
+    return this.payrollConfigurationService.approveTerminationBenefit(id, dto.approvedBy);
+  }
+
+  @Post('termination-benefit/:id/reject')
+  rejectTerminationBenefit(@Param('id') id: string, @Body() dto: RejectConfigDto) {
+    return this.payrollConfigurationService.rejectTerminationBenefit(id, dto.rejectedBy, dto.reason);
+  }
+
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
   /* -------------------------------------------------------------------------- */
   /*                               Pay Types API                                */
   /* -------------------------------------------------------------------------- */
@@ -151,8 +206,8 @@ export class PayrollConfigurationController {
   }
 
   @Get('pay-types')
-  async getAllPayTypes(@Query('status') status?: ConfigStatus) {
-    return this.payrollConfigurationService.getAllPayTypes(status);
+  async getAllPayTypes(@Query('status') status?: string) {
+    return this.payrollConfigurationService.getAllPayTypes(status as ConfigStatus);
   }
 
   @Get('pay-types/:id')
@@ -336,17 +391,17 @@ export class PayrollConfigurationController {
   }
 
   @Get('allowances/:id')
-  getAllowance(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    return this.payrollConfigurationService.getAllowance(id.toString());
+  getAllowance(@Param('id') id: string) {
+    return this.payrollConfigurationService.getAllowance(id);
   }
 
   @Patch('allowances/:id')
   updateAllowance(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id') id: string,
     @Body() body: UpdateAllowanceDto,
   ) {
     return this.payrollConfigurationService.updateAllowance(
-      id.toString(),
+      id,
       body,
     );
   }
@@ -359,13 +414,28 @@ export class PayrollConfigurationController {
 
   @Patch('allowances/:id/status')
   approveAllowance(
+<<<<<<< HEAD
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
     @Body() body: ApproveConfigDto,
   ) {
     return this.payrollConfigurationService.setAllowanceStatus(
       id.toString(),
       { status: ConfigStatus.APPROVED, approverId: body.approvedBy },
+=======
+    @Param('id') id: string,
+    @Body() body: ApprovalDto,
+  ) {
+    return this.payrollConfigurationService.setAllowanceStatus(
+      id,
+      body,
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
     );
+  }
+
+  @Delete('allowances/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteAllowance(@Param('id') id: string): Promise<void> {
+    return this.payrollConfigurationService.deleteAllowance(id);
   }
 
   /* -------------------------------------------------------------------------- */
@@ -374,22 +444,45 @@ export class PayrollConfigurationController {
 
   @Post('company-settings')
   upsertCompanySettings(@Body() body: CompanyWideSettingsDto) {
+<<<<<<< HEAD
     return this.payrollConfigurationService.upsertCompanyWideSettings(body as any);
+=======
+    return this.payrollConfigurationService.upsertCompanyWideSettings(body);
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
   }
 
   @Get('company-settings')
-  getCompanySettings() {
-    return this.payrollConfigurationService.getCompanyWideSettings();
+  getCompanySettings(@Query('status') status?: ConfigStatus) {
+    return this.payrollConfigurationService.getCompanyWideSettings(status);
+  }
+
+  @Post('company-settings/:id/approve')
+  approveCompanySettings(@Param('id') id: string, @Body() dto: ApproveConfigDto) {
+    return this.payrollConfigurationService.approveCompanySettings(id, dto.approvedBy);
+  }
+
+  @Post('company-settings/:id/reject')
+  rejectCompanySettings(@Param('id') id: string, @Body() dto: RejectConfigDto) {
+    return this.payrollConfigurationService.rejectCompanySettings(id, dto.rejectedBy, dto.reason);
   }
 
   @Patch('company-settings/:id')
   updateCompanySettings(
+<<<<<<< HEAD
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
     @Body() body: CompanyWideSettingsDto,
   ) {
     return this.payrollConfigurationService.updateCompanyWideSettings(
       id.toString(),
       body as any,
+=======
+    @Param('id') id: string,
+    @Body() body: CompanyWideSettingsDto,
+  ) {
+    return this.payrollConfigurationService.updateCompanyWideSettings(
+      id,
+      body,
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
     );
   }
 
@@ -408,37 +501,54 @@ export class PayrollConfigurationController {
   }
 
   @Get('insurance-brackets/:id')
-  getInsurance(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    return this.payrollConfigurationService.getInsuranceBracket(id.toString());
+  getInsurance(@Param('id') id: string) {
+    return this.payrollConfigurationService.getInsuranceBracket(id);
   }
 
   @Patch('insurance-brackets/:id')
   updateInsurance(
+<<<<<<< HEAD
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+=======
+    @Param('id') id: string,
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
     @Body() body: UpdateInsuranceBracketDto,
   ) {
     return this.payrollConfigurationService.updateInsuranceBracket(
-      id.toString(),
+      id,
       body,
     );
   }
 
   @Patch('insurance-brackets/:id/status')
   approveInsurance(
+<<<<<<< HEAD
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
     @Body() body: ApproveConfigDto,
   ) {
     return this.payrollConfigurationService.setInsuranceBracketStatus(
       id.toString(),
       { status: ConfigStatus.APPROVED, approverId: body.approvedBy },
+=======
+    @Param('id') id: string,
+    @Body() body: ApprovalDto,
+  ) {
+    return this.payrollConfigurationService.setInsuranceBracketStatus(
+      id,
+      body,
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
     );
   }
 
   @Delete('insurance-brackets/:id')
+<<<<<<< HEAD
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteInsurance(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+=======
+  deleteInsurance(@Param('id') id: string) {
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
     return this.payrollConfigurationService.deleteInsuranceBracket(
-      id.toString(),
+      id,
     );
   }
 }

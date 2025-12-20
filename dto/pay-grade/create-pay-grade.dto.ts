@@ -8,7 +8,9 @@ import {
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  IsEnum,
 } from 'class-validator';
+import { ConfigStatus } from '../../enums/payroll-configuration-enums';
 
 @ValidatorConstraint({ name: 'GrossSalaryGteBaseSalary', async: false })
 export class GrossSalaryGteBaseSalaryConstraint
@@ -43,4 +45,19 @@ export class CreatePayGradeDto {
   @Min(6000)
   @Validate(GrossSalaryGteBaseSalaryConstraint)
   grossSalary: number;
+<<<<<<< HEAD
+=======
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  positionId?: string;
+
+  @IsOptional()
+  @IsEnum(ConfigStatus)
+  status?: ConfigStatus;
+>>>>>>> 637ea5be382394614a4b3d42e9f5a9289e042448
 }
