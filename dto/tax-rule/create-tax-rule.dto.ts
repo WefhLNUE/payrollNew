@@ -9,7 +9,7 @@ export class CreateTaxRuleDto {
 
     @IsOptional()
     @IsString()
-    description?: string;
+    description?: string; // (optional)
 
     @Type(() => Number)
     @IsNumber()

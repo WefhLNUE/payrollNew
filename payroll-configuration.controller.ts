@@ -61,8 +61,8 @@ export class PayrollConfigurationController {
     }
 
     @Patch('signing-bonus/:id')
-    updateSigningBonus(@Param('id') id: string, @Body() dto: UpdateSigningBonusDto) {
-        return this.payrollConfigurationService.updateSigningBonus(id, dto);
+    updateSigningBonus(@Param('id', ParseObjectIdPipe) id: Types.ObjectId, @Body() dto: UpdateSigningBonusDto) {
+        return this.payrollConfigurationService.updateSigningBonus(id.toString(), dto);
     }
 
     @Get('signing-bonus')
@@ -71,16 +71,16 @@ export class PayrollConfigurationController {
     }
 
     @Get('signing-bonus/:id')
-    getOneSigningBonus(@Param('id') id: string) {
-        return this.payrollConfigurationService.getOneSigningBonus(id);
+    getOneSigningBonus(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.getOneSigningBonus(id.toString());
     }
 
     @Patch('signing-bonus/:id/status')
     approveSigningBonus(
-        @Param('id') id: string,
+        @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
         @Body() body: ApproveConfigDto,
     ) {
-        return this.payrollConfigurationService.setSigningBonusStatus(id, {
+        return this.payrollConfigurationService.setSigningBonusStatus(id.toString(), {
             status: ConfigStatus.APPROVED,
             approverId: body.approvedBy,
         });
@@ -88,8 +88,8 @@ export class PayrollConfigurationController {
 
     @Delete('signing-bonus/:id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    deleteSigningBonus(@Param('id') id: string) {
-        return this.payrollConfigurationService.deleteSigningBonus(id);
+    deleteSigningBonus(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.deleteSigningBonus(id.toString());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -102,8 +102,8 @@ export class PayrollConfigurationController {
     }
 
     @Patch('tax-rule/:id')
-    updateTaxRule(@Param('id') id: string, @Body() dto: UpdateTaxRuleDto) {
-        return this.payrollConfigurationService.updateTaxRule(id, dto);
+    updateTaxRule(@Param('id', ParseObjectIdPipe) id: Types.ObjectId, @Body() dto: UpdateTaxRuleDto) {
+        return this.payrollConfigurationService.updateTaxRule(id.toString(), dto);
     }
 
     @Get('tax-rule')
@@ -112,16 +112,16 @@ export class PayrollConfigurationController {
     }
 
     @Get('tax-rule/:id')
-    getOneTaxRule(@Param('id') id: string) {
-        return this.payrollConfigurationService.getOneTaxRule(id);
+    getOneTaxRule(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.getOneTaxRule(id.toString());
     }
 
     @Patch('tax-rule/:id/status')
     approveTaxRule(
-        @Param('id') id: string,
+        @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
         @Body() body: ApproveConfigDto,
     ) {
-        return this.payrollConfigurationService.setTaxRuleStatus(id, {
+        return this.payrollConfigurationService.setTaxRuleStatus(id.toString(), {
             status: ConfigStatus.APPROVED,
             approverId: body.approvedBy,
         });
@@ -129,8 +129,8 @@ export class PayrollConfigurationController {
 
     @Delete('tax-rule/:id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    deleteTaxRule(@Param('id') id: string) {
-        return this.payrollConfigurationService.deleteTaxRule(id);
+    deleteTaxRule(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.deleteTaxRule(id.toString());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -143,8 +143,8 @@ export class PayrollConfigurationController {
     }
 
     @Patch('termination-benefit/:id')
-    updateTerminationBenefit(@Param('id') id: string, @Body() dto: UpdateTerminationBenefitDto) {
-        return this.payrollConfigurationService.updateTerminationBenefit(id, dto);
+    updateTerminationBenefit(@Param('id', ParseObjectIdPipe) id: Types.ObjectId, @Body() dto: UpdateTerminationBenefitDto) {
+        return this.payrollConfigurationService.updateTerminationBenefit(id.toString(), dto);
     }
 
     @Get('termination-benefit')
@@ -153,16 +153,16 @@ export class PayrollConfigurationController {
     }
 
     @Get('termination-benefit/:id')
-    getOneTerminationBenefit(@Param('id') id: string) {
-        return this.payrollConfigurationService.getOneTerminationBenefit(id);
+    getOneTerminationBenefit(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.getOneTerminationBenefit(id.toString());
     }
 
     @Patch('termination-benefit/:id/status')
     approveTerminationBenefit(
-        @Param('id') id: string,
+        @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
         @Body() body: ApproveConfigDto,
     ) {
-        return this.payrollConfigurationService.setTerminationBenefitStatus(id, {
+        return this.payrollConfigurationService.setTerminationBenefitStatus(id.toString(), {
             status: ConfigStatus.APPROVED,
             approverId: body.approvedBy,
         });
@@ -170,8 +170,8 @@ export class PayrollConfigurationController {
 
     @Delete('termination-benefit/:id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    deleteTerminationBenefit(@Param('id') id: string) {
-        return this.payrollConfigurationService.deleteTerminationBenefit(id);
+    deleteTerminationBenefit(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.deleteTerminationBenefit(id.toString());
     }
 
     /* -------------------------------------------------------------------------- */
@@ -468,6 +468,7 @@ export class PayrollConfigurationController {
     }
 
     @Delete('insurance-brackets/:id')
+    @HttpCode(HttpStatus.NO_CONTENT)
     deleteInsurance(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
         return this.payrollConfigurationService.deleteInsuranceBracket(
             id.toString(),

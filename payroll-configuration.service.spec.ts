@@ -134,7 +134,6 @@ describe('PayrollConfigurationService', () => {
     await expect(
       service.createInsuranceBracket({
         name: 'Invalid',
-        amount: 200,
         minSalary: 5000,
         maxSalary: 3000,
         employeeRate: 5,

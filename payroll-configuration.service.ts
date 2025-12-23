@@ -42,6 +42,7 @@ import { payGrade, payGradeDocument } from './Models/payGrades.schema';
 
 type AllowancePayload = Pick<allowance, 'name' | 'amount'> & {
     createdBy?: string;
+    status?: ConfigStatus;
 };
 
 type InsurancePayload = Pick<
@@ -49,6 +50,7 @@ type InsurancePayload = Pick<
     'name' | 'minSalary' | 'maxSalary' | 'employeeRate' | 'employerRate'
 > & {
     createdBy?: string;
+    status?: ConfigStatus;
 };
 
 interface UpdateStatusPayload {
@@ -89,7 +91,7 @@ export class PayrollConfigurationService {
 
     // ------- Signing Bonus -------
     async createSigningBonus(dto: CreateSigningBonusDto) {
-        const data = { ...dto, status: ConfigStatus.DRAFT };
+        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
         return this.signingBonusModel.create(data);
     }
 
@@ -108,9 +110,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteSigningBonus(id: string) {
-        const doc = await this.findSigningBonusOrFail(id);
-        this.ensureDraft(doc.status, 'Signing bonus');
-        return this.signingBonusModel.deleteOne({ _id: id });
+        await this.findSigningBonusOrFail(id);
+        return this.signingBonusModel.findByIdAndDelete(id).exec();
     }
 
     async getAllSigningBonus() {
@@ -123,15 +124,23 @@ export class PayrollConfigurationService {
 
     // ------- Tax Rules -------
     async createTaxRule(dto: CreateTaxRuleDto) {
-        const data = { ...dto, status: ConfigStatus.DRAFT };
+        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
         return this.taxRulesModel.create(data);
     }
 
     async updateTaxRule(id: string, dto: UpdateTaxRuleDto) {
         const doc = await this.findTaxRuleOrFail(id);
-        this.ensureDraft(doc.status, 'Tax rule');
 
-        return this.taxRulesModel.findByIdAndUpdate(id, dto, { new: true });
+        if (doc.status !== ConfigStatus.DRAFT) {
+            throw new BadRequestException('Can only edit Tax Rule in DRAFT status');
+        }
+
+        doc.set(dto);
+        if (dto.createdBy) {
+            doc.createdBy = this.toObjectId(dto.createdBy) as any;
+        }
+
+        return doc.save();
     }
 
     async setTaxRuleStatus(id: string, payload: UpdateStatusPayload) {
@@ -142,9 +151,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteTaxRule(id: string) {
-        const doc = await this.findTaxRuleOrFail(id);
-        this.ensureDraft(doc.status, 'Tax rule');
-        return this.taxRulesModel.deleteOne({ _id: id });
+        await this.findTaxRuleOrFail(id);
+        return this.taxRulesModel.findByIdAndDelete(id).exec();
     }
 
     async getAllTaxRules() {
@@ -157,7 +165,7 @@ export class PayrollConfigurationService {
 
     // ------- Termination Benefits -------
     async createTerminationBenefit(dto: CreateTerminationBenefitDto) {
-        const data = { ...dto, status: ConfigStatus.DRAFT };
+        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
         return this.termModel.create(data);
     }
 
@@ -176,9 +184,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteTerminationBenefit(id: string) {
-        const doc = await this.findTerminationBenefitOrFail(id);
-        this.ensureDraft(doc.status, 'Termination benefit');
-        return this.termModel.deleteOne({ _id: id });
+        await this.findTerminationBenefitOrFail(id);
+        return this.termModel.findByIdAndDelete(id).exec();
     }
 
     async getAllTerminationBenefits() {
@@ -196,19 +203,21 @@ export class PayrollConfigurationService {
     async createPayType(
         createDto: CreatePayTypeDto,
     ): Promise<payTypeDocument> {
+        const trimmedType = createDto.type?.trim();
         const exists = await this.payTypeModel
-            .findOne({ type: createDto.type })
+            .findOne({ type: { $regex: new RegExp(`^${trimmedType}$`, 'i') } })
             .lean()
             .exec();
         if (exists) {
             throw new ConflictException(
-                `Pay type "${createDto.type}" already exists`,
+                `Pay type "${trimmedType}" already exists`,
             );
         }
 
         const created = new this.payTypeModel({
             ...createDto,
-            status: ConfigStatus.DRAFT,
+            type: trimmedType,
+            status: createDto.status || ConfigStatus.DRAFT,
         });
         return created.save();
     }
@@ -254,13 +263,7 @@ export class PayrollConfigurationService {
     }
 
     async deletePayType(id: string): Promise<void> {
-        const payTypeDoc = await this.getPayTypeById(id);
-
-        if (payTypeDoc.status !== ConfigStatus.DRAFT) {
-            throw new BadRequestException(
-                'Can only delete configurations in DRAFT status',
-            );
-        }
+        await this.getPayTypeById(id);
 
         // Validate if pay type can be deleted
         const canDelete = await this.validateDeletion('payType', id);
@@ -270,7 +273,7 @@ export class PayrollConfigurationService {
             );
         }
 
-        await this.payTypeModel.deleteOne({ _id: id }).exec();
+        await this.payTypeModel.findByIdAndDelete(id).exec();
     }
 
     async approvePayType(
@@ -352,14 +355,15 @@ export class PayrollConfigurationService {
     async createPayGrade(
         createDto: CreatePayGradeDto,
     ): Promise<payGradeDocument> {
+        const trimmedGrade = createDto.grade?.trim();
         const exists = await this.payGradeModel
-            .findOne({ grade: createDto.grade })
+            .findOne({ grade: trimmedGrade })
             .lean()
             .exec();
 
         if (exists) {
             throw new ConflictException(
-                `Pay grade "${createDto.grade}" already exists`,
+                `Pay grade "${trimmedGrade}" already exists`,
             );
         }
 
@@ -367,7 +371,8 @@ export class PayrollConfigurationService {
 
         const created = new this.payGradeModel({
             ...createDto,
-            status: ConfigStatus.DRAFT,
+            grade: trimmedGrade,
+            status: createDto.status || ConfigStatus.DRAFT,
         });
 
         return created.save();
@@ -419,13 +424,7 @@ export class PayrollConfigurationService {
     }
 
     async deletePayGrade(id: string): Promise<void> {
-        const payGradeDoc = await this.getPayGradeById(id);
-
-        if (payGradeDoc.status !== ConfigStatus.DRAFT) {
-            throw new BadRequestException(
-                'Can only delete configurations in DRAFT status',
-            );
-        }
+        await this.getPayGradeById(id);
 
         // Validate if pay grade can be deleted
         const canDelete = await this.validateDeletion('payGrade', id);
@@ -435,7 +434,7 @@ export class PayrollConfigurationService {
             );
         }
 
-        await this.payGradeModel.deleteOne({ _id: id }).exec();
+        await this.payGradeModel.findByIdAndDelete(id).exec();
     }
 
     async approvePayGrade(
@@ -594,7 +593,7 @@ export class PayrollConfigurationService {
         const created = new this.payrollPoliciesModel({
             ...createDto,
             effectiveDate: new Date(createDto.effectiveDate),
-            status: ConfigStatus.DRAFT,
+            status: createDto.status || ConfigStatus.DRAFT,
         });
 
         return created.save();
@@ -685,15 +684,8 @@ export class PayrollConfigurationService {
     }
 
     async deletePayrollPolicy(id: string): Promise<void> {
-        const policy = await this.getPayrollPolicyById(id);
-
-        if (policy.status !== ConfigStatus.DRAFT) {
-            throw new BadRequestException(
-                'Can only delete configurations in DRAFT status',
-            );
-        }
-
-        await this.payrollPoliciesModel.deleteOne({ _id: id }).exec();
+        await this.getPayrollPolicyById(id);
+        await this.payrollPoliciesModel.findByIdAndDelete(id).exec();
     }
 
     async approvePayrollPolicy(
@@ -751,7 +743,7 @@ export class PayrollConfigurationService {
         const created = await this.allowanceModel.create({
             ...payload,
             createdBy: this.toObjectId(payload.createdBy),
-            status: ConfigStatus.DRAFT,
+            status: payload.status || ConfigStatus.DRAFT,
         });
         return created.toObject();
     }
@@ -787,9 +779,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteAllowance(id: string) {
-        const record = await this.findAllowanceOrFail(id);
-        this.ensureDraft(record.status, 'Allowance');
-        return this.allowanceModel.deleteOne({ _id: id });
+        await this.findAllowanceOrFail(id);
+        return this.allowanceModel.findByIdAndDelete(id).exec();
     }
 
     /* -------------------------------------------------------------------------- */
@@ -797,8 +788,9 @@ export class PayrollConfigurationService {
     /* -------------------------------------------------------------------------- */
 
     async upsertCompanyWideSettings(payload: Partial<CompanyWideSettings>) {
-        if (payload.payDate && typeof payload.payDate === 'string') {
-            payload.payDate = new Date(payload.payDate);
+        const payDate = payload.payDate as any;
+        if (payDate && typeof payDate === 'string') {
+            payload.payDate = new Date(payDate);
         }
 
         const existing = await this.companySettingsModel.findOne();
@@ -814,8 +806,9 @@ export class PayrollConfigurationService {
     }
 
     async updateCompanyWideSettings(id: string, payload: Partial<CompanyWideSettings>) {
-        if (payload.payDate && typeof payload.payDate === 'string') {
-            payload.payDate = new Date(payload.payDate);
+        const payDate = payload.payDate as any;
+        if (payDate && typeof payDate === 'string') {
+            payload.payDate = new Date(payDate);
         }
         const updated = await this.companySettingsModel
             .findByIdAndUpdate(id, payload, { new: true, runValidators: true })
@@ -835,7 +828,7 @@ export class PayrollConfigurationService {
         const created = await this.insuranceModel.create({
             ...payload,
             createdBy: this.toObjectId(payload.createdBy),
-            status: ConfigStatus.DRAFT,
+            status: payload.status || ConfigStatus.DRAFT,
         });
         return created.toObject();
     }
