@@ -3,9 +3,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model, FilterQuery, Types } from 'mongoose';
 import { ConfigStatus, PolicyType } from './enums/payroll-configuration-enums';
 
-import { signingBonus } from './Models/signingBonus.schema';
-import { taxRules } from './Models/taxRules.schema';
-import { terminationAndResignationBenefits } from './Models/terminationAndResignationBenefits';
+import { signingBonus, signingBonusDocument } from './Models/signingBonus.schema';
+import { taxRules, taxRulesDocument } from './Models/taxRules.schema';
+import { terminationAndResignationBenefits, terminationAndResignationBenefitsDocument } from './Models/terminationAndResignationBenefits';
 import { allowance, allowanceDocument } from './Models/allowance.schema';
 import {
     CompanyWideSettings,
@@ -60,13 +60,13 @@ interface UpdateStatusPayload {
 export class PayrollConfigurationService {
     constructor(
         @InjectModel(signingBonus.name)
-        private signingBonusModel: mongoose.Model<signingBonus>,
+        private readonly signingBonusModel: Model<signingBonusDocument>,
 
         @InjectModel(taxRules.name)
-        private taxRulesModel: mongoose.Model<taxRules>,
+        private readonly taxRulesModel: Model<taxRulesDocument>,
 
         @InjectModel(terminationAndResignationBenefits.name)
-        private termModel: mongoose.Model<terminationAndResignationBenefits>,
+        private readonly termModel: Model<terminationAndResignationBenefitsDocument>,
 
         @InjectModel(allowance.name)
         private readonly allowanceModel: Model<allowanceDocument>,
@@ -94,12 +94,23 @@ export class PayrollConfigurationService {
     }
 
     async updateSigningBonus(id: string, dto: UpdateSigningBonusDto) {
-        const doc = await this.signingBonusModel.findById(id);
-        if (!doc) throw new BadRequestException('Not found');
-        if (doc.status !== ConfigStatus.DRAFT)
-            throw new BadRequestException('Cannot edit non-draft configuration');
+        const doc = await this.findSigningBonusOrFail(id);
+        this.ensureDraft(doc.status, 'Signing bonus');
 
         return this.signingBonusModel.findByIdAndUpdate(id, dto, { new: true });
+    }
+
+    async setSigningBonusStatus(id: string, payload: UpdateStatusPayload) {
+        const record = await this.findSigningBonusOrFail(id);
+        this.ensureDraft(record.status, 'Signing bonus status');
+        this.applyStatus(record, payload);
+        return record.save();
+    }
+
+    async deleteSigningBonus(id: string) {
+        const doc = await this.findSigningBonusOrFail(id);
+        this.ensureDraft(doc.status, 'Signing bonus');
+        return this.signingBonusModel.deleteOne({ _id: id });
     }
 
     async getAllSigningBonus() {
@@ -107,7 +118,7 @@ export class PayrollConfigurationService {
     }
 
     async getOneSigningBonus(id: string) {
-        return this.signingBonusModel.findById(id);
+        return this.findSigningBonusOrFail(id);
     }
 
     // ------- Tax Rules -------
@@ -117,12 +128,23 @@ export class PayrollConfigurationService {
     }
 
     async updateTaxRule(id: string, dto: UpdateTaxRuleDto) {
-        const doc = await this.taxRulesModel.findById(id);
-        if (!doc) throw new BadRequestException('Not found');
-        if (doc.status !== ConfigStatus.DRAFT)
-            throw new BadRequestException('Cannot edit non-draft configuration');
+        const doc = await this.findTaxRuleOrFail(id);
+        this.ensureDraft(doc.status, 'Tax rule');
 
         return this.taxRulesModel.findByIdAndUpdate(id, dto, { new: true });
+    }
+
+    async setTaxRuleStatus(id: string, payload: UpdateStatusPayload) {
+        const record = await this.findTaxRuleOrFail(id);
+        this.ensureDraft(record.status, 'Tax rule status');
+        this.applyStatus(record, payload);
+        return record.save();
+    }
+
+    async deleteTaxRule(id: string) {
+        const doc = await this.findTaxRuleOrFail(id);
+        this.ensureDraft(doc.status, 'Tax rule');
+        return this.taxRulesModel.deleteOne({ _id: id });
     }
 
     async getAllTaxRules() {
@@ -130,7 +152,7 @@ export class PayrollConfigurationService {
     }
 
     async getOneTaxRule(id: string) {
-        return this.taxRulesModel.findById(id);
+        return this.findTaxRuleOrFail(id);
     }
 
     // ------- Termination Benefits -------
@@ -140,12 +162,23 @@ export class PayrollConfigurationService {
     }
 
     async updateTerminationBenefit(id: string, dto: UpdateTerminationBenefitDto) {
-        const doc = await this.termModel.findById(id);
-        if (!doc) throw new BadRequestException('Not found');
-        if (doc.status !== ConfigStatus.DRAFT)
-            throw new BadRequestException('Cannot edit non-draft configuration');
+        const doc = await this.findTerminationBenefitOrFail(id);
+        this.ensureDraft(doc.status, 'Termination benefit');
 
         return this.termModel.findByIdAndUpdate(id, dto, { new: true });
+    }
+
+    async setTerminationBenefitStatus(id: string, payload: UpdateStatusPayload) {
+        const record = await this.findTerminationBenefitOrFail(id);
+        this.ensureDraft(record.status, 'Termination benefit status');
+        this.applyStatus(record, payload);
+        return record.save();
+    }
+
+    async deleteTerminationBenefit(id: string) {
+        const doc = await this.findTerminationBenefitOrFail(id);
+        this.ensureDraft(doc.status, 'Termination benefit');
+        return this.termModel.deleteOne({ _id: id });
     }
 
     async getAllTerminationBenefits() {
@@ -153,7 +186,7 @@ export class PayrollConfigurationService {
     }
 
     async getOneTerminationBenefit(id: string) {
-        return this.termModel.findById(id);
+        return this.findTerminationBenefitOrFail(id);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -753,6 +786,12 @@ export class PayrollConfigurationService {
         return record.save();
     }
 
+    async deleteAllowance(id: string) {
+        const record = await this.findAllowanceOrFail(id);
+        this.ensureDraft(record.status, 'Allowance');
+        return this.allowanceModel.deleteOne({ _id: id });
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                          Company-wide settings API                         */
     /* -------------------------------------------------------------------------- */
@@ -856,19 +895,13 @@ export class PayrollConfigurationService {
     async validateDeletion(entityType: string, id: string): Promise<boolean> {
         switch (entityType) {
             case 'payType':
-                // TODO: Check contract references when Employee module exists
-                // For now, allow deletion (return true)
-                // When Employee module is integrated, check if any employee contract uses this pay type
-                return true;
-
             case 'payGrade':
-                // TODO: Check employee references when Employee module exists
-                // For now, allow deletion (return true)
-                // When Employee module is integrated, check if any employee has this pay grade assigned
-                return true;
-
             case 'payrollPolicy':
-                // TODO: Check if policy is being used by any employee or payroll calculation
+            case 'signingBonus':
+            case 'taxRule':
+            case 'terminationBenefit':
+            case 'allowance':
+                // TODO: Check references when other modules are integrated
                 // For now, allow deletion (return true)
                 return true;
 
@@ -922,6 +955,30 @@ export class PayrollConfigurationService {
         const record = await this.insuranceModel.findById(id).exec();
         if (!record) {
             throw new NotFoundException('Insurance bracket not found');
+        }
+        return record;
+    }
+
+    private async findSigningBonusOrFail(id: string) {
+        const record = await this.signingBonusModel.findById(id).exec();
+        if (!record) {
+            throw new NotFoundException('Signing bonus not found');
+        }
+        return record;
+    }
+
+    private async findTaxRuleOrFail(id: string) {
+        const record = await this.taxRulesModel.findById(id).exec();
+        if (!record) {
+            throw new NotFoundException('Tax rule not found');
+        }
+        return record;
+    }
+
+    private async findTerminationBenefitOrFail(id: string) {
+        const record = await this.termModel.findById(id).exec();
+        if (!record) {
+            throw new NotFoundException('Termination benefit not found');
         }
         return record;
     }

@@ -75,6 +75,23 @@ export class PayrollConfigurationController {
         return this.payrollConfigurationService.getOneSigningBonus(id);
     }
 
+    @Patch('signing-bonus/:id/status')
+    approveSigningBonus(
+        @Param('id') id: string,
+        @Body() body: ApproveConfigDto,
+    ) {
+        return this.payrollConfigurationService.setSigningBonusStatus(id, {
+            status: ConfigStatus.APPROVED,
+            approverId: body.approvedBy,
+        });
+    }
+
+    @Delete('signing-bonus/:id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteSigningBonus(@Param('id') id: string) {
+        return this.payrollConfigurationService.deleteSigningBonus(id);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                               Tax Rules API                                */
     /* -------------------------------------------------------------------------- */
@@ -99,6 +116,23 @@ export class PayrollConfigurationController {
         return this.payrollConfigurationService.getOneTaxRule(id);
     }
 
+    @Patch('tax-rule/:id/status')
+    approveTaxRule(
+        @Param('id') id: string,
+        @Body() body: ApproveConfigDto,
+    ) {
+        return this.payrollConfigurationService.setTaxRuleStatus(id, {
+            status: ConfigStatus.APPROVED,
+            approverId: body.approvedBy,
+        });
+    }
+
+    @Delete('tax-rule/:id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteTaxRule(@Param('id') id: string) {
+        return this.payrollConfigurationService.deleteTaxRule(id);
+    }
+
     /* -------------------------------------------------------------------------- */
     /*                          Termination Benefits API                          */
     /* -------------------------------------------------------------------------- */
@@ -121,6 +155,23 @@ export class PayrollConfigurationController {
     @Get('termination-benefit/:id')
     getOneTerminationBenefit(@Param('id') id: string) {
         return this.payrollConfigurationService.getOneTerminationBenefit(id);
+    }
+
+    @Patch('termination-benefit/:id/status')
+    approveTerminationBenefit(
+        @Param('id') id: string,
+        @Body() body: ApproveConfigDto,
+    ) {
+        return this.payrollConfigurationService.setTerminationBenefitStatus(id, {
+            status: ConfigStatus.APPROVED,
+            approverId: body.approvedBy,
+        });
+    }
+
+    @Delete('termination-benefit/:id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteTerminationBenefit(@Param('id') id: string) {
+        return this.payrollConfigurationService.deleteTerminationBenefit(id);
     }
 
     /* -------------------------------------------------------------------------- */
@@ -342,6 +393,12 @@ export class PayrollConfigurationController {
             id.toString(),
             { status: ConfigStatus.APPROVED, approverId: body.approvedBy },
         );
+    }
+
+    @Delete('allowances/:id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteAllowance(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+        return this.payrollConfigurationService.deleteAllowance(id.toString());
     }
 
     /* -------------------------------------------------------------------------- */
