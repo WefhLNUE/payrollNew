@@ -91,8 +91,25 @@ export class PayrollConfigurationService {
 
     // ------- Signing Bonus -------
     async createSigningBonus(dto: CreateSigningBonusDto) {
-        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
-        return this.signingBonusModel.create(data);
+        // Ensure database indexes match the current schema to remove any stale "ghost" indexes (like 'name')
+        await this.signingBonusModel.syncIndexes();
+
+        const data = {
+            ...dto,
+            positionName: dto.positionName?.trim(),
+            status: dto.status || ConfigStatus.DRAFT,
+            createdBy: this.toObjectId(dto.createdBy)
+        };
+
+        try {
+            return await this.signingBonusModel.create(data);
+        } catch (error) {
+            if (error.code === 11000) {
+                const details = error.keyValue ? JSON.stringify(error.keyValue) : 'null field collision';
+                throw new ConflictException(`Unique constraint violation: ${details}. Please ensure this configuration is unique.`);
+            }
+            throw new BadRequestException(error.message);
+        }
     }
 
     async updateSigningBonus(id: string, dto: UpdateSigningBonusDto) {
@@ -977,6 +994,7 @@ export class PayrollConfigurationService {
     }
 
     private toObjectId(id?: string) {
-        return id ? new Types.ObjectId(id) : undefined;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) return undefined;
+        return new Types.ObjectId(id);
     }
 }
