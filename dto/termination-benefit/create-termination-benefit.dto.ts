@@ -1,6 +1,5 @@
-import { IsNumber, IsOptional, IsString, Min, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConfigStatus } from '../../enums/payroll-configuration-enums';
 
 export class CreateTerminationBenefitDto {
     @IsString()
@@ -15,10 +14,6 @@ export class CreateTerminationBenefitDto {
     @IsOptional()
     @IsString()
     terms?: string;
-
-    @IsOptional()
-    @IsEnum(ConfigStatus)
-    status?: ConfigStatus;
 
     @IsOptional()
     @IsString()

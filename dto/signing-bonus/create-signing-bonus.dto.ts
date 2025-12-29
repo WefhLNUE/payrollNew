@@ -1,6 +1,5 @@
-import { IsNumber, IsOptional, IsString, Min, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ConfigStatus } from '../../enums/payroll-configuration-enums';
 
 export class CreateSigningBonusDto {
     @IsString()
@@ -13,10 +12,7 @@ export class CreateSigningBonusDto {
     amount: number;
 
     @IsOptional()
-    @IsEnum(ConfigStatus)
-    status?: ConfigStatus;
-
-    @IsOptional()
     @IsString()
     createdBy?: string;
 }
+

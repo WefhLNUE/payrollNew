@@ -1,5 +1,4 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional, IsEnum } from 'class-validator';
-import { ConfigStatus } from '../../enums/payroll-configuration-enums';
+import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
 
 export class CompanyWideSettingsDto {
     @IsDateString()
@@ -12,8 +11,4 @@ export class CompanyWideSettingsDto {
     @IsString()
     @IsNotEmpty()
     currency: string;
-
-    @IsOptional()
-    @IsEnum(ConfigStatus)
-    status?: ConfigStatus;
 }

@@ -42,7 +42,6 @@ import { payGrade, payGradeDocument } from './Models/payGrades.schema';
 
 type AllowancePayload = Pick<allowance, 'name' | 'amount'> & {
     createdBy?: string;
-    status?: ConfigStatus;
 };
 
 type InsurancePayload = Pick<
@@ -50,7 +49,6 @@ type InsurancePayload = Pick<
     'name' | 'minSalary' | 'maxSalary' | 'employeeRate' | 'employerRate'
 > & {
     createdBy?: string;
-    status?: ConfigStatus;
 };
 
 interface UpdateStatusPayload {
@@ -97,9 +95,10 @@ export class PayrollConfigurationService {
         const data = {
             ...dto,
             positionName: dto.positionName?.trim(),
-            status: dto.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
             createdBy: this.toObjectId(dto.createdBy)
         };
+
 
         try {
             return await this.signingBonusModel.create(data);
@@ -116,8 +115,21 @@ export class PayrollConfigurationService {
         const doc = await this.findSigningBonusOrFail(id);
         this.ensureDraft(doc.status, 'Signing bonus');
 
-        return this.signingBonusModel.findByIdAndUpdate(id, dto, { new: true });
+        const updateData: any = { ...dto };
+        if (dto.positionName) {
+            updateData.positionName = dto.positionName.trim();
+        }
+
+        doc.set(updateData);
+
+
+        if (dto.createdBy) {
+            doc.createdBy = this.toObjectId(dto.createdBy) as any;
+        }
+
+        return doc.save();
     }
+
 
     async setSigningBonusStatus(id: string, payload: UpdateStatusPayload) {
         const record = await this.findSigningBonusOrFail(id);
@@ -127,7 +139,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteSigningBonus(id: string) {
-        await this.findSigningBonusOrFail(id);
+        const record = await this.findSigningBonusOrFail(id);
+        this.ensureNotDraft(record.status, 'Signing bonus');
         return this.signingBonusModel.findByIdAndDelete(id).exec();
     }
 
@@ -141,9 +154,11 @@ export class PayrollConfigurationService {
 
     // ------- Tax Rules -------
     async createTaxRule(dto: CreateTaxRuleDto) {
-        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
+        const data = { ...dto, status: ConfigStatus.DRAFT };
         return this.taxRulesModel.create(data);
     }
+
+
 
     async updateTaxRule(id: string, dto: UpdateTaxRuleDto) {
         const doc = await this.findTaxRuleOrFail(id);
@@ -152,7 +167,10 @@ export class PayrollConfigurationService {
             throw new BadRequestException('Can only edit Tax Rule in DRAFT status');
         }
 
-        doc.set(dto);
+        const updateData: any = { ...dto };
+        doc.set(updateData);
+
+
         if (dto.createdBy) {
             doc.createdBy = this.toObjectId(dto.createdBy) as any;
         }
@@ -168,7 +186,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteTaxRule(id: string) {
-        await this.findTaxRuleOrFail(id);
+        const record = await this.findTaxRuleOrFail(id);
+        this.ensureNotDraft(record.status, 'Tax rule');
         return this.taxRulesModel.findByIdAndDelete(id).exec();
     }
 
@@ -182,16 +201,22 @@ export class PayrollConfigurationService {
 
     // ------- Termination Benefits -------
     async createTerminationBenefit(dto: CreateTerminationBenefitDto) {
-        const data = { ...dto, status: dto.status || ConfigStatus.DRAFT };
+        const data = { ...dto, status: ConfigStatus.DRAFT };
         return this.termModel.create(data);
     }
+
+
 
     async updateTerminationBenefit(id: string, dto: UpdateTerminationBenefitDto) {
         const doc = await this.findTerminationBenefitOrFail(id);
         this.ensureDraft(doc.status, 'Termination benefit');
 
-        return this.termModel.findByIdAndUpdate(id, dto, { new: true });
+        const updateData: any = { ...dto };
+        doc.set(updateData);
+
+        return doc.save();
     }
+
 
     async setTerminationBenefitStatus(id: string, payload: UpdateStatusPayload) {
         const record = await this.findTerminationBenefitOrFail(id);
@@ -201,7 +226,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteTerminationBenefit(id: string) {
-        await this.findTerminationBenefitOrFail(id);
+        const record = await this.findTerminationBenefitOrFail(id);
+        this.ensureNotDraft(record.status, 'Termination benefit');
         return this.termModel.findByIdAndDelete(id).exec();
     }
 
@@ -234,9 +260,11 @@ export class PayrollConfigurationService {
         const created = new this.payTypeModel({
             ...createDto,
             type: trimmedType,
-            status: createDto.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
         });
+
         return created.save();
+
     }
 
     async getAllPayTypes(
@@ -275,12 +303,16 @@ export class PayrollConfigurationService {
 
 
 
-        Object.assign(payTypeDoc, updateDto);
+        const updateData: any = { ...updateDto };
+        Object.assign(payTypeDoc, updateData);
+
         return payTypeDoc.save();
+
     }
 
     async deletePayType(id: string): Promise<void> {
-        await this.getPayTypeById(id);
+        const record = await this.getPayTypeById(id);
+        this.ensureNotDraft(record.status, 'Pay type');
 
         // Validate if pay type can be deleted
         const canDelete = await this.validateDeletion('payType', id);
@@ -389,10 +421,12 @@ export class PayrollConfigurationService {
         const created = new this.payGradeModel({
             ...createDto,
             grade: trimmedGrade,
-            status: createDto.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
         });
 
+
         return created.save();
+
     }
 
     async getAllPayGrades(
@@ -436,12 +470,16 @@ export class PayrollConfigurationService {
 
         this.validateSalaryRules(baseSalary, grossSalary);
 
-        Object.assign(payGradeDoc, updateDto);
+        const updateData: any = { ...updateDto };
+        Object.assign(payGradeDoc, updateData);
+
         return payGradeDoc.save();
+
     }
 
     async deletePayGrade(id: string): Promise<void> {
-        await this.getPayGradeById(id);
+        const record = await this.getPayGradeById(id);
+        this.ensureNotDraft(record.status, 'Pay grade');
 
         // Validate if pay grade can be deleted
         const canDelete = await this.validateDeletion('payGrade', id);
@@ -610,10 +648,12 @@ export class PayrollConfigurationService {
         const created = new this.payrollPoliciesModel({
             ...createDto,
             effectiveDate: new Date(createDto.effectiveDate),
-            status: createDto.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
         });
 
+
         return created.save();
+
     }
 
     async getAllPayrollPolicies(
@@ -696,12 +736,16 @@ export class PayrollConfigurationService {
             this.validateRuleDefinition(updateDto.ruleDefinition, policyType);
         }
 
-        Object.assign(policy, updateDto);
+        const updateData: any = { ...updateDto };
+        Object.assign(policy, updateData);
+
         return policy.save();
+
     }
 
     async deletePayrollPolicy(id: string): Promise<void> {
-        await this.getPayrollPolicyById(id);
+        const record = await this.getPayrollPolicyById(id);
+        this.ensureNotDraft(record.status as ConfigStatus, 'Payroll policy');
         await this.payrollPoliciesModel.findByIdAndDelete(id).exec();
     }
 
@@ -757,13 +801,17 @@ export class PayrollConfigurationService {
     /* -------------------------------------------------------------------------- */
 
     async createAllowance(payload: AllowancePayload) {
+        if (payload.name) payload.name = payload.name.trim();
         const created = await this.allowanceModel.create({
             ...payload,
             createdBy: this.toObjectId(payload.createdBy),
-            status: payload.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
         });
         return created.toObject();
     }
+
+
+
 
     async listAllowances(status?: ConfigStatus) {
         const filter = status ? { status } : {};
@@ -776,17 +824,23 @@ export class PayrollConfigurationService {
 
     async updateAllowance(id: string, payload: Partial<AllowancePayload>) {
         const record = await this.findAllowanceOrFail(id);
-        if (!record) {
-            throw new NotFoundException('Allowance not found');
-        }
         this.ensureDraft(record.status, 'Allowance');
-        if (payload.name !== undefined) record.name = payload.name;
-        if (payload.amount !== undefined) record.amount = payload.amount;
-        if (payload.createdBy !== undefined) {
-            record.createdBy = this.toObjectId(payload.createdBy);
+
+        if (payload.name) {
+            payload.name = payload.name.trim();
         }
+
+        const updateData: any = { ...payload };
+        record.set(updateData);
+        if (payload.createdBy) {
+            record.createdBy = this.toObjectId(payload.createdBy) as any;
+        }
+
         return record.save();
+
     }
+
+
 
     async setAllowanceStatus(id: string, payload: UpdateStatusPayload) {
         const record = await this.findAllowanceOrFail(id);
@@ -796,7 +850,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteAllowance(id: string) {
-        await this.findAllowanceOrFail(id);
+        const record = await this.findAllowanceOrFail(id);
+        this.ensureNotDraft(record.status, 'Allowance');
         return this.allowanceModel.findByIdAndDelete(id).exec();
     }
 
@@ -842,13 +897,17 @@ export class PayrollConfigurationService {
 
     async createInsuranceBracket(payload: InsurancePayload) {
         this.ensureSalaryRange(payload.minSalary, payload.maxSalary);
+        if (payload.name) payload.name = payload.name.trim();
         const created = await this.insuranceModel.create({
             ...payload,
             createdBy: this.toObjectId(payload.createdBy),
-            status: payload.status || ConfigStatus.DRAFT,
+            status: ConfigStatus.DRAFT,
         });
         return created.toObject();
     }
+
+
+
 
     async listInsuranceBrackets(status?: ConfigStatus) {
         const filter = status ? { status } : {};
@@ -862,19 +921,29 @@ export class PayrollConfigurationService {
     async updateInsuranceBracket(id: string, payload: Partial<InsurancePayload>) {
         const record = await this.findInsuranceOrFail(id);
         this.ensureDraft(record.status, 'Insurance bracket');
+
         if (payload.minSalary !== undefined || payload.maxSalary !== undefined) {
             this.ensureSalaryRange(
                 payload.minSalary ?? record.minSalary,
                 payload.maxSalary ?? record.maxSalary,
             );
         }
-        record.set({
-            ...payload,
-            createdBy:
-                payload.createdBy !== undefined ? this.toObjectId(payload.createdBy) : record.createdBy,
-        });
+
+        if (payload.name) {
+            payload.name = payload.name.trim();
+        }
+
+        const updateData: any = { ...payload };
+        record.set(updateData);
+        if (payload.createdBy) {
+            record.createdBy = this.toObjectId(payload.createdBy) as any;
+        }
+
         return record.save();
+
     }
+
+
 
     async setInsuranceBracketStatus(id: string, payload: UpdateStatusPayload) {
         const record = await this.findInsuranceOrFail(id);
@@ -884,6 +953,8 @@ export class PayrollConfigurationService {
     }
 
     async deleteInsuranceBracket(id: string) {
+        const record = await this.findInsuranceOrFail(id);
+        this.ensureNotDraft(record.status, 'Insurance bracket');
         const result = await this.insuranceModel.findByIdAndDelete(id).exec();
         if (!result) {
             throw new NotFoundException('Insurance bracket not found');
@@ -941,9 +1012,57 @@ export class PayrollConfigurationService {
         }
     }
 
+    async exportConfiguration() {
+        const [
+            signingBonuses,
+            taxRules,
+            terminationBenefits,
+            allowances,
+            companySettings,
+            insuranceBrackets,
+            payTypes,
+            payrollPolicies,
+            payGrades,
+        ] = await Promise.all([
+            this.signingBonusModel.find().lean().exec(),
+            this.taxRulesModel.find().lean().exec(),
+            this.termModel.find().lean().exec(),
+            this.allowanceModel.find().lean().exec(),
+            this.companySettingsModel.find().lean().exec(),
+            this.insuranceModel.find().lean().exec(),
+            this.payTypeModel.find().lean().exec(),
+            this.payrollPoliciesModel.find().lean().exec(),
+            this.payGradeModel.find().lean().exec(),
+        ]);
+
+        return {
+            metadata: {
+                exportedAt: new Date().toISOString(),
+                version: '1.0',
+            },
+            data: {
+                signingBonuses,
+                taxRules,
+                terminationBenefits,
+                allowances,
+                companySettings,
+                insuranceBrackets,
+                payTypes,
+                payrollPolicies,
+                payGrades,
+            }
+        };
+    }
+
     private ensureDraft(status: ConfigStatus, context: string) {
         if (status !== ConfigStatus.DRAFT) {
             throw new BadRequestException(`${context} can only be modified while in draft status.`);
+        }
+    }
+
+    private ensureNotDraft(status: ConfigStatus, context: string) {
+        if (status === ConfigStatus.DRAFT) {
+            throw new BadRequestException(`${context} cannot be deleted while in draft status.`);
         }
     }
 
